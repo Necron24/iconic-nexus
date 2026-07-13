@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { validateImageFile } from "@/lib/security/image-file";
 
 const validTypes = new Set(["app", "game"]);
 const validStages = new Set(["prototype", "alpha", "beta", "released"]);
@@ -87,6 +88,7 @@ async function uploadImage(
   folder: string,
   file: File
 ): Promise<string> {
+  await validateImageFile(file, maxFileSize, "Project image");
   const objectPath = `${userId}/${projectId}/${folder}/${cleanFileName(file.name)}`;
   const buffer = Buffer.from(await file.arrayBuffer());
   const { error } = await supabase.storage.from(bucketName).upload(objectPath, buffer, {

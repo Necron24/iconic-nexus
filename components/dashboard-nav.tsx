@@ -10,6 +10,7 @@ export function DashboardNav() {
         ["/dashboard/credits", "Credits"],
         ["/dashboard/notifications", "Notifications"],
         ["/dashboard/profile", "Profile"],
+        ["/dashboard/account", "Account"],
         ["/help", "Help"]
       ].map(([href, label]) => (
         <Link key={href} href={href} className="rounded-lg px-4 py-2 text-sm font-semibold text-soft hover:bg-white/5 hover:text-white">

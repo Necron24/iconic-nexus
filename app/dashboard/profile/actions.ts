@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { validateImageFile } from "@/lib/security/image-file";
 
 const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
 const accents = new Set(["lime", "cyan", "violet", "amber", "rose", "blue"]);
@@ -23,8 +24,7 @@ function safeUrl(value: string) {
 }
 
 async function uploadProfileImage({ supabase, userId, file, kind, maxBytes }: { supabase: Awaited<ReturnType<typeof createClient>>; userId: string; file: File; kind: string; maxBytes: number; }) {
-  if (!allowed.has(file.type)) fail(`${kind} must be PNG, JPG or WebP.`);
-  if (file.size > maxBytes) fail(`${kind} is too large.`);
+  try { await validateImageFile(file, maxBytes, kind); } catch (error) { fail(error instanceof Error ? error.message : `${kind} is invalid.`); }
   const ext = (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '');
   const path = `${userId}/${kind.toLowerCase().replace(/\s+/g, '-')}-${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from('profile-media').upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type });

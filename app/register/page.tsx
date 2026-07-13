@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { register } from "@/app/auth/actions";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 export default async function RegisterPage({
   searchParams
@@ -58,7 +59,7 @@ export default async function RegisterPage({
             <input name="acceptedTerms" value="true" type="checkbox" required className="mt-1 h-4 w-4" />
             <span>I agree to the <a href="/terms" className="font-bold text-lime">Terms</a>, <a href="/privacy" className="font-bold text-lime">Privacy Policy</a> and <a href="/community-guidelines" className="font-bold text-lime">Community Guidelines</a>.</span>
           </label>
-          <button className="btn-primary sm:col-span-2" type="submit">Create account</button>
+          <div className="sm:col-span-2"><TurnstileWidget action="register" /></div><button className="btn-primary sm:col-span-2" type="submit">Create account</button>
         </form>
 
         <p className="mt-6 text-center text-sm text-soft">

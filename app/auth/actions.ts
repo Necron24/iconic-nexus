@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { verifyTurnstile } from "@/lib/security/turnstile";
 
 function encodeMessage(type: "error" | "success", message: string) {
   return `${type}=${encodeURIComponent(message)}`;
@@ -13,6 +14,7 @@ function siteUrl() {
 }
 
 export async function login(formData: FormData) {
+  if (!(await verifyTurnstile(formData, "login"))) redirect(`/login?${encodeMessage("error", "Security verification failed. Refresh the page and try again.")}`);
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   if (!email || !password) redirect(`/login?${encodeMessage("error", "Enter your email address and password.")}`);
@@ -24,6 +26,7 @@ export async function login(formData: FormData) {
 }
 
 export async function register(formData: FormData) {
+  if (!(await verifyTurnstile(formData, "register"))) redirect(`/register?${encodeMessage("error", "Security verification failed. Refresh the page and try again.")}`);
   const username = String(formData.get("username") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const country = String(formData.get("country") ?? "").trim();
@@ -55,6 +58,7 @@ export async function register(formData: FormData) {
 }
 
 export async function requestPasswordReset(formData: FormData) {
+  if (!(await verifyTurnstile(formData, "password_reset"))) redirect(`/forgot-password?${encodeMessage("error", "Security verification failed. Refresh the page and try again.")}`);
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email) redirect(`/forgot-password?${encodeMessage("error", "Enter your email address.")}`);
   const supabase = await createClient();

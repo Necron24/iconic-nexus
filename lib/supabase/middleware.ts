@@ -26,6 +26,18 @@ export async function updateSession(request: NextRequest) {
   const protectedRoute = pathname.startsWith("/dashboard");
   const guestRoute = pathname === "/login" || pathname === "/register";
 
+  if (user && pathname !== "/account-restricted") {
+    const { data: profile } = await supabase.from("profiles").select("account_status,suspension_reason").eq("id", user.id).maybeSingle();
+    if (profile && profile.account_status && profile.account_status !== "active") {
+      const target = request.nextUrl.clone();
+      target.pathname = "/account-restricted";
+      target.search = "";
+      target.searchParams.set("status", profile.account_status);
+      if (profile.suspension_reason) target.searchParams.set("reason", profile.suspension_reason);
+      return NextResponse.redirect(target);
+    }
+  }
+
   if (protectedRoute && !user) {
     const target = request.nextUrl.clone();
     target.pathname = "/login";

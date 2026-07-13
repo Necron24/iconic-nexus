@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "@/app/auth/actions";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 export default async function LoginPage({
   searchParams
@@ -35,7 +36,7 @@ export default async function LoginPage({
             <input name="password" type="password" autoComplete="current-password" required className="field" placeholder="••••••••" />
           </label>
           <div className="flex justify-end"><Link href="/forgot-password" className="text-sm font-semibold text-cyan hover:text-white">Forgot password?</Link></div>
-          <button className="btn-primary w-full" type="submit">Log in</button>
+          <TurnstileWidget action="login" /><button className="btn-primary w-full" type="submit">Log in</button>
         </form>
 
         <p className="mt-6 text-center text-sm text-soft">

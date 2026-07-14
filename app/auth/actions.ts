@@ -10,7 +10,16 @@ function encodeMessage(type: "error" | "success", message: string) {
 }
 
 function siteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const deploymentHost = process.env.VERCEL_URL?.trim();
+
+  const resolved = configured
+    || (productionHost ? `https://${productionHost}` : "")
+    || (deploymentHost ? `https://${deploymentHost}` : "")
+    || "http://localhost:3000";
+
+  return resolved.replace(/\/$/, "");
 }
 
 export async function login(formData: FormData) {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AlertTriangle, Download, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { deleteAccount } from "./actions";
+import { PasswordField } from "@/components/password-field";
 
 export default async function AccountSettingsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams;
@@ -33,7 +34,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
       <div className="flex items-start gap-3"><ShieldAlert className="mt-1 text-red-300"/><div><h3 className="text-xl font-black text-red-100">Delete account permanently</h3><p className="mt-2 leading-7 text-red-100/75">This removes your profile, projects, campaigns, uploads and access. Deletion is blocked while submitted feedback or unresolved disputes still exist.</p></div></div>
       {params.error && <div className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-100">{params.error}</div>}
       <form action={deleteAccount} className="mt-6 space-y-4">
-        <label><span className="label">Current password</span><input name="password" type="password" autoComplete="current-password" required className="field" /></label>
+        <PasswordField name="password" label="Current password" autoComplete="current-password" />
         <label><span className="label">Type DELETE MY ACCOUNT</span><input name="confirmation" required className="field" placeholder="DELETE MY ACCOUNT" /></label>
         <div className="flex items-start gap-3 rounded-xl bg-black/20 p-4 text-sm text-red-100/80"><AlertTriangle className="mt-0.5 shrink-0" size={18}/><p>This action cannot be undone. Export anything you need before continuing.</p></div>
         <button type="submit" className="rounded-xl border border-red-400/40 bg-red-500/20 px-5 py-3 font-black text-red-100 transition hover:bg-red-500/30">Permanently delete my account</button>

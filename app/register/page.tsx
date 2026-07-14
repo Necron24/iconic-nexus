@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { register } from "@/app/auth/actions";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { PasswordPairFields } from "@/components/password-field";
 
 export default async function RegisterPage({
   searchParams
@@ -47,14 +48,7 @@ export default async function RegisterPage({
             <span className="label">Email address</span>
             <input name="email" type="email" autoComplete="email" required className="field" placeholder="you@example.com" />
           </label>
-          <label>
-            <span className="label">Password</span>
-            <input name="password" type="password" autoComplete="new-password" required minLength={8} className="field" placeholder="At least 8 characters" />
-          </label>
-          <label>
-            <span className="label">Confirm password</span>
-            <input name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} className="field" placeholder="Repeat your password" />
-          </label>
+          <PasswordPairFields />
           <label className="flex items-start gap-3 text-sm text-soft sm:col-span-2">
             <input name="acceptedTerms" value="true" type="checkbox" required className="mt-1 h-4 w-4" />
             <span>I agree to the <a href="/terms" className="font-bold text-lime">Terms</a>, <a href="/privacy" className="font-bold text-lime">Privacy Policy</a> and <a href="/community-guidelines" className="font-bold text-lime">Community Guidelines</a>.</span>

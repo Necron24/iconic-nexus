@@ -1,24 +1,34 @@
 "use client";
 
 import Script from "next/script";
+import { RefreshCw, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+
+type WidgetStatus = "loading" | "ready" | "verified" | "error";
 
 export function TurnstileWidget({ action }: { action: string }) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const id = useId().replace(/:/g, "");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<WidgetStatus>("loading");
 
-  const clearToken = useCallback(() => {
-    const input = document.getElementById(`${id}-token`) as HTMLInputElement | null;
-    if (input) input.value = "";
-  }, [id]);
+  const tokenInput = useCallback(() => document.getElementById(`${id}-token`) as HTMLInputElement | null, [id]);
+  const clearToken = useCallback(() => { const input = tokenInput(); if (input) input.value = ""; }, [tokenInput]);
+
+  const removeWidget = useCallback(() => {
+    if (widgetId.current && window.turnstile) {
+      try { window.turnstile.remove(widgetId.current); } catch { /* widget may already be gone */ }
+    }
+    widgetId.current = null;
+    clearToken();
+  }, [clearToken]);
 
   const renderWidget = useCallback(() => {
-    if (!siteKey || !containerRef.current || widgetId.current || !window.turnstile) return;
-
+    if (!siteKey || !containerRef.current || widgetId.current || !window.turnstile) return false;
+    setStatus("ready");
     widgetId.current = window.turnstile.render(containerRef.current, {
       sitekey: siteKey,
       action,
@@ -29,43 +39,55 @@ export function TurnstileWidget({ action }: { action: string }) {
       "refresh-expired": "auto",
       "refresh-timeout": "auto",
       callback(token: string) {
-        const input = document.getElementById(`${id}-token`) as HTMLInputElement | null;
+        const input = tokenInput();
         if (input) input.value = token;
+        setStatus("verified");
       },
       "expired-callback"() {
         clearToken();
+        setStatus("ready");
       },
       "timeout-callback"() {
         clearToken();
+        setStatus("error");
       },
       "error-callback"() {
         clearToken();
+        setStatus("error");
         if (retryTimer.current) clearTimeout(retryTimer.current);
         retryTimer.current = setTimeout(() => {
-          if (widgetId.current && window.turnstile) {
-            window.turnstile.reset(widgetId.current);
-          }
-        }, 1500);
+          removeWidget();
+          renderWidget();
+        }, 2500);
         return true;
       }
     });
-  }, [action, clearToken, id, siteKey]);
+    return true;
+  }, [action, clearToken, removeWidget, siteKey, tokenInput]);
+
+  const retry = useCallback(() => {
+    setStatus("loading");
+    removeWidget();
+    if (!renderWidget()) {
+      retryTimer.current = setTimeout(renderWidget, 600);
+    }
+  }, [removeWidget, renderWidget]);
 
   useEffect(() => {
-    if (window.turnstile) setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    renderWidget();
+    if (renderWidget()) return;
+    pollTimer.current = setInterval(() => {
+      if (renderWidget() && pollTimer.current) {
+        clearInterval(pollTimer.current);
+        pollTimer.current = null;
+      }
+    }, 350);
 
     return () => {
+      if (pollTimer.current) clearInterval(pollTimer.current);
       if (retryTimer.current) clearTimeout(retryTimer.current);
-      if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
-      widgetId.current = null;
-      clearToken();
+      removeWidget();
     };
-  }, [clearToken, ready, renderWidget]);
+  }, [removeWidget, renderWidget]);
 
   if (!siteKey) {
     return process.env.NODE_ENV === "development" ? (
@@ -77,16 +99,13 @@ export function TurnstileWidget({ action }: { action: string }) {
 
   return (
     <div className="space-y-2">
-      <Script
-        id="cloudflare-turnstile-script"
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-        strategy="afterInteractive"
-        onLoad={() => setReady(true)}
-        onReady={() => setReady(true)}
-      />
+      <Script id="cloudflare-turnstile-script" src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onLoad={() => { renderWidget(); }} onReady={() => { renderWidget(); }} />
       <input id={`${id}-token`} type="hidden" name="turnstileToken" />
       <div ref={containerRef} className="min-h-[65px] w-full overflow-hidden rounded-xl" />
-      <p className="text-xs text-soft">Protected by Cloudflare Turnstile.</p>
+      <div className="flex items-center justify-between gap-3 text-xs text-soft">
+        <span className="flex items-center gap-2"><ShieldCheck size={14} className={status === "verified" ? "text-lime" : "text-cyan"} />{status === "verified" ? "Security check complete." : status === "error" ? "Cloudflare could not finish the check." : "Protected by Cloudflare Turnstile."}</span>
+        {status === "error" && <button type="button" onClick={retry} className="inline-flex items-center gap-1 font-bold text-cyan hover:text-white"><RefreshCw size={13} /> Retry</button>}
+      </div>
     </div>
   );
 }

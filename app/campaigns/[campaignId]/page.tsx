@@ -26,10 +26,9 @@ export default async function CampaignPage({
   const project = Array.isArray(campaign.projects) ? campaign.projects[0] : campaign.projects;
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
 
-  const { count: joinedCount } = await supabase
-    .from("campaign_members")
-    .select("id", { count: "exact", head: true })
-    .eq("campaign_id", campaign.id);
+  const { data: joinedCount } = await supabase.rpc("get_campaign_member_count", {
+    p_campaign_id: campaign.id
+  });
 
   const { data: membership } = user
     ? await supabase

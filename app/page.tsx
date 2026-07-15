@@ -3,15 +3,8 @@ import Link from "next/link";
 import { ArrowRight, Bug, Coins, Gamepad2, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ code?: string; error?: string; error_code?: string; error_description?: string }> }) {
-  const authParams = await searchParams;
-  if (authParams.code) redirect(`/auth/confirm?code=${encodeURIComponent(authParams.code)}&next=/update-password`);
-  if (authParams.error || authParams.error_code || authParams.error_description) {
-    const message = authParams.error_description || authParams.error || "The email link is invalid or has expired.";
-    redirect(`/auth/error?code=${encodeURIComponent(authParams.error_code || "")}&description=${encodeURIComponent(message)}`);
-  }
+export default async function HomePage() {
   const supabase = await createClient();
   const [{ data: projects }, { data: campaigns }] = await Promise.all([
     supabase
@@ -22,16 +15,17 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       .limit(3),
     supabase
       .from("testing_campaigns")
-      .select("id, title, tester_goal, reward_credits, duration_days, campaign_members(count), projects!inner(platform, is_published)")
+      .select("id, title, tester_goal, reward_credits, duration_days, projects!inner(platform, is_published)")
       .eq("status", "active")
       .eq("projects.is_published", true)
       .limit(1)
   ]);
 
   const featuredCampaign = campaigns?.[0];
-  const joinedCount = Array.isArray(featuredCampaign?.campaign_members)
-    ? Number(featuredCampaign.campaign_members[0]?.count ?? 0)
-    : 0;
+  const { data: featuredCount } = featuredCampaign
+    ? await supabase.rpc("get_campaign_member_count", { p_campaign_id: featuredCampaign.id })
+    : { data: 0 };
+  const joinedCount = Number(featuredCount ?? 0);
   const goal = Number(featuredCampaign?.tester_goal ?? 0);
   const campaignProgress = goal > 0 ? Math.min(100, Math.round((joinedCount / goal) * 100)) : 0;
   const campaignProject = Array.isArray(featuredCampaign?.projects)

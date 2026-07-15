@@ -13,17 +13,13 @@ export default async function CampaignsPage() {
     .or(`ends_at.is.null,ends_at.gt.${now}`)
     .order("created_at", { ascending: false });
 
-  const campaignIds = (campaigns ?? []).map((campaign) => campaign.id);
-  const memberCounts = new Map<string, number>();
-  if (campaignIds.length > 0) {
-    const { data: members } = await supabase
-      .from("campaign_members")
-      .select("campaign_id")
-      .in("campaign_id", campaignIds);
-    for (const member of members ?? []) {
-      memberCounts.set(member.campaign_id, (memberCounts.get(member.campaign_id) ?? 0) + 1);
-    }
-  }
+  const countResults = await Promise.all(
+    (campaigns ?? []).map(async (campaign) => {
+      const { data } = await supabase.rpc("get_campaign_member_count", { p_campaign_id: campaign.id });
+      return [campaign.id, Number(data ?? 0)] as const;
+    })
+  );
+  const memberCounts = new Map<string, number>(countResults);
 
   return (
     <section className="container-page py-14">

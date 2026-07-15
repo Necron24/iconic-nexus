@@ -41,7 +41,10 @@ export async function logTestSession(membershipId: string, formData: FormData) {
   if (!device) fail(path, "Device name is required.");
   const { error } = await supabase.from("test_sessions").insert({ campaign_member_id: membershipId, minutes_tested: minutes, device_name: device, os_version: os || null, notes: notes || null });
   if (error) fail(path, error.message);
-  if (membership.status === "joined") await supabase.from("campaign_members").update({ status: "in_progress" }).eq("id", membershipId).eq("tester_id", user.id);
+  if (membership.status === "joined") {
+    const { error: progressError } = await supabase.rpc("advance_my_testing_membership", { p_member_id: membershipId, p_action: "start" });
+    if (progressError) fail(path, progressError.message);
+  }
   revalidatePath(path);
   revalidatePath("/dashboard/testing");
   redirect(`${path}?success=${encodeURIComponent("Test session saved.")}`);
@@ -123,18 +126,11 @@ export async function submitFeedback(membershipId: string, formData: FormData) {
       const { error: attachError } = await supabase.from("feedback_attachments").insert({ feedback_report_id: reportId, file_url: publicData.publicUrl, file_type: file.type });
       if (attachError) throw new Error(attachError.message);
     }
-    const { error: statusError } = await supabase.from("campaign_members").update({ status: "submitted", submitted_at: new Date().toISOString() }).eq("id", membershipId).eq("tester_id", user.id);
+    const { error: statusError } = await supabase.rpc("advance_my_testing_membership", {
+      p_member_id: membershipId,
+      p_action: "submit"
+    });
     if (statusError) throw new Error(statusError.message);
-    const project = Array.isArray(campaign.projects) ? campaign.projects[0] : campaign.projects;
-    if (project?.owner_id && project?.id) {
-      await supabase.from("notifications").insert({
-        profile_id: project.owner_id,
-        type: "feedback_submitted",
-        title: "Feedback ready for review",
-        message: "A tester submitted feedback. It will auto-approve after 7 days if no action is taken.",
-        link_url: `/dashboard/projects/${project.id}/campaigns/${membership.campaign_id}/feedback`
-      });
-    }
   } catch (e) {
     if (uploaded.length) await supabase.storage.from(bucket).remove(uploaded);
     fail(path, e instanceof Error ? e.message : "Feedback attachments could not be saved.");

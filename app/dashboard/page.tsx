@@ -11,7 +11,7 @@ export default async function DashboardPage() {
     supabase.from("profiles").select("credits, tester_reputation, display_name, username").eq("id", user.id).single(),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).eq("status", "approved"),
-    supabase.from("testing_campaigns").select("id, title, tester_goal, campaign_members(count), projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
+    supabase.from("testing_campaigns").select("id, title, tester_goal, projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
     supabase.from("campaign_members").select("id, testing_campaigns!inner(projects!inner(owner_id))", { count: "exact", head: true }).eq("testing_campaigns.projects.owner_id", user.id).eq("status", "submitted"),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).in("status", ["joined", "in_progress"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("profile_id", user.id).eq("is_read", false)
@@ -19,7 +19,10 @@ export default async function DashboardPage() {
 
   const profile = profileResult.data;
   const activeCampaign = campaignsResult.data?.[0];
-  const joinedCount = Array.isArray(activeCampaign?.campaign_members) ? Number(activeCampaign.campaign_members[0]?.count ?? 0) : 0;
+  const { data: activeCampaignCount } = activeCampaign
+    ? await supabase.rpc("get_campaign_member_count", { p_campaign_id: activeCampaign.id })
+    : { data: 0 };
+  const joinedCount = Number(activeCampaignCount ?? 0);
   const testerGoal = Number(activeCampaign?.tester_goal ?? 0);
   const progress = testerGoal > 0 ? Math.min(100, Math.round((joinedCount / testerGoal) * 100)) : 0;
   const pendingReviews = reviewsResult.count ?? 0;

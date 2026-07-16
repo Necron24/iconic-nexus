@@ -1,98 +1,25 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowDownLeft, ArrowUpRight, Coins, PiggyBank } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Coins, CreditCard, PiggyBank, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
-const labels: Record<string, string> = {
-  welcome: "Welcome credits",
-  test_reward: "Approved test reward",
-  helpful_bonus: "Helpful feedback bonus",
-  bug_bonus: "Confirmed bug bonus",
-  campaign_cost: "Campaign budget reserved",
-  refund: "Unused campaign budget returned",
-  admin_adjustment: "Account adjustment"
-};
+const labels: Record<string,string> = { welcome:"Welcome credits",test_reward:"Approved test reward",helpful_bonus:"Helpful feedback bonus",bug_bonus:"Confirmed bug bonus",campaign_cost:"Campaign budget reserved",refund:"Unused campaign budget returned",admin_adjustment:"Account adjustment",credit_purchase:"Credit pack purchase",boost_purchase:"Promotion boost" };
 
-export default async function DashboardCreditsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const [profileResult, transactionsResult, campaignsResult] = await Promise.all([
-    supabase.from("profiles").select("credits").eq("id", user.id).single(),
-    supabase.from("credit_transactions")
-      .select("id, amount, transaction_type, note, created_at")
-      .eq("profile_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100),
-    supabase.from("testing_campaigns")
-      .select("reserved_credits, projects!inner(owner_id)")
-      .eq("projects.owner_id", user.id)
-      .in("status", ["draft", "active", "paused"])
-  ]);
-
-  const balance = Number(profileResult.data?.credits ?? 0);
-  const reserved = (campaignsResult.data ?? []).reduce((sum, campaign) => sum + Number(campaign.reserved_credits ?? 0), 0);
-  const transactions = transactionsResult.data ?? [];
-  const earned = transactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0);
-  const spent = Math.abs(transactions.filter((transaction) => transaction.amount < 0).reduce((sum, transaction) => sum + transaction.amount, 0));
-
-  return (
-    <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
-      <div className="space-y-5">
-        <div className="card p-6">
-          <p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Available balance</p>
-          <div className="mt-4 flex items-center gap-3">
-            <Coins className="text-lime" size={34} />
-            <p className="text-5xl font-black text-lime">{balance}</p>
-          </div>
-          <p className="mt-2 text-soft">Nexus Credits ready to use</p>
-          <Link href="/campaigns" className="btn-primary mt-6 w-full">Earn credits by testing</Link>
-        </div>
-
-        <div className="card p-5">
-          <PiggyBank className="text-cyan" size={22} />
-          <p className="mt-3 text-xs text-soft">Reserved for active campaigns</p>
-          <p className="mt-1 text-3xl font-black">{reserved}</p>
-          <p className="mt-2 text-xs text-soft">Unused reserved credits are returned when a campaign is completed or cancelled.</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="card p-5">
-            <ArrowDownLeft className="text-lime" size={21} />
-            <p className="mt-3 text-xs text-soft">Total received</p>
-            <p className="mt-1 text-2xl font-black">{earned}</p>
-          </div>
-          <div className="card p-5">
-            <ArrowUpRight className="text-cyan" size={21} />
-            <p className="mt-3 text-xs text-soft">Total reserved/spent</p>
-            <p className="mt-1 text-2xl font-black">{spent}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="card p-6">
-        <h2 className="text-2xl font-black">Transaction history</h2>
-        <p className="mt-2 text-sm text-soft">Every reward, campaign reservation and refund is recorded here.</p>
-
-        {transactions.length === 0 ? (
-          <div className="mt-6 rounded-xl border border-dashed border-white/15 p-8 text-center text-soft">No transactions yet.</div>
-        ) : (
-          <div className="mt-5 divide-y divide-white/10">
-            {transactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center justify-between gap-4 py-4">
-                <div>
-                  <p className="font-semibold">{transaction.note || labels[transaction.transaction_type] || transaction.transaction_type.replaceAll("_", " ")}</p>
-                  <p className="mt-1 text-xs text-soft">{new Date(transaction.created_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</p>
-                </div>
-                <p className={`text-lg font-black ${transaction.amount > 0 ? "text-lime" : "text-white"}`}>
-                  {transaction.amount > 0 ? "+" : ""}{transaction.amount}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+export default async function DashboardCreditsPage({ searchParams }: { searchParams: Promise<{ error?: string; success?: string }> }) {
+ const params=await searchParams; const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
+ const [profileResult,transactionsResult,campaignsResult,packsResult,ordersResult]=await Promise.all([
+  supabase.from("profiles").select("credits").eq("id",user.id).single(),
+  supabase.from("credit_transactions").select("id,amount,transaction_type,note,created_at").eq("profile_id",user.id).order("created_at",{ascending:false}).limit(100),
+  supabase.from("testing_campaigns").select("reserved_credits,projects!inner(owner_id)").eq("projects.owner_id",user.id).in("status",["draft","active","paused"]),
+  supabase.from("credit_packs").select("code,name,credits,price_zar,description").eq("active",true).order("sort_order"),
+  supabase.from("credit_purchase_orders").select("id,credits,amount_zar,status,created_at").eq("profile_id",user.id).order("created_at",{ascending:false}).limit(10)
+ ]);
+ const balance=Number(profileResult.data?.credits??0); const reserved=(campaignsResult.data??[]).reduce((s,c)=>s+Number(c.reserved_credits??0),0); const tx=transactionsResult.data??[]; const earned=tx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0); const spent=Math.abs(tx.filter(t=>t.amount<0).reduce((s,t)=>s+t.amount,0));
+ return <div className="space-y-6">
+  {params.error&&<div className="rounded-xl border border-red-400/40 bg-red-400/10 p-4 text-red-200">{params.error}</div>}
+  <div className="grid gap-5 lg:grid-cols-[340px_1fr]"><div className="space-y-5"><div className="card p-6"><p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Available balance</p><div className="mt-4 flex items-center gap-3"><Coins className="text-lime" size={34}/><p className="text-5xl font-black text-lime">{balance}</p></div><p className="mt-2 text-soft">Nexus Credits ready to use</p><div className="mt-6 grid gap-3"><Link href="/campaigns" className="btn-primary w-full">Earn credits by testing</Link><Link href="/dashboard/boosts" className="btn-secondary w-full"><Rocket size={17}/> Use credits for boosts</Link></div></div><div className="card p-5"><PiggyBank className="text-cyan" size={22}/><p className="mt-3 text-xs text-soft">Reserved for active campaigns</p><p className="mt-1 text-3xl font-black">{reserved}</p></div><div className="grid grid-cols-2 gap-4"><div className="card p-5"><ArrowDownLeft className="text-lime"/><p className="mt-3 text-xs text-soft">Total received</p><p className="mt-1 text-2xl font-black">{earned}</p></div><div className="card p-5"><ArrowUpRight className="text-cyan"/><p className="mt-3 text-xs text-soft">Reserved/spent</p><p className="mt-1 text-2xl font-black">{spent}</p></div></div></div>
+   <div className="card p-6"><h2 className="text-2xl font-black">Transaction history</h2><p className="mt-2 text-sm text-soft">Every reward, purchase, reservation and refund is recorded here.</p>{tx.length===0?<div className="mt-6 rounded-xl border border-dashed border-white/15 p-8 text-center text-soft">No transactions yet.</div>:<div className="mt-5 divide-y divide-white/10">{tx.map(t=><div key={t.id} className="flex items-center justify-between gap-4 py-4"><div><p className="font-semibold">{t.note||labels[t.transaction_type]||t.transaction_type.replaceAll("_"," ")}</p><p className="mt-1 text-xs text-soft">{new Date(t.created_at).toLocaleString("en-ZA",{dateStyle:"medium",timeStyle:"short"})}</p></div><p className={`text-lg font-black ${t.amount>0?"text-lime":"text-white"}`}>{t.amount>0?"+":""}{t.amount}</p></div>)}</div>}</div></div>
+  <div className="card p-6"><div className="flex items-center gap-3"><CreditCard className="text-cyan"/><div><h2 className="text-2xl font-black">Buy Nexus Credits</h2><p className="text-sm text-soft">Secure hosted checkout through PayFast. Credits are added only after server confirmation.</p></div></div><div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{(packsResult.data??[]).map((p:any)=><div key={p.code} className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan">{p.name}</p><p className="mt-3 text-4xl font-black text-lime">{p.credits}</p><p className="text-sm text-soft">credits</p><p className="mt-3 text-2xl font-black">R{Number(p.price_zar).toFixed(2)}</p><p className="mt-2 min-h-10 text-xs text-soft">{p.description}</p><form method="post" action="/api/payfast/checkout" className="mt-5"><input type="hidden" name="packCode" value={p.code}/><button className="btn-primary w-full">Buy securely</button></form></div>)}</div></div>
+  <div className="card p-6"><h2 className="text-xl font-black">Recent payment orders</h2>{(ordersResult.data??[]).length?<div className="mt-4 divide-y divide-white/10">{(ordersResult.data??[]).map((o:any)=><div key={o.id} className="flex justify-between gap-4 py-3"><div><p className="font-semibold">{o.credits} credits · R{Number(o.amount_zar).toFixed(2)}</p><p className="text-xs text-soft">{new Date(o.created_at).toLocaleString("en-ZA")}</p></div><span className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold uppercase">{o.status}</span></div>)}</div>:<p className="mt-3 text-soft">No purchases yet.</p>}</div>
+ </div>;
 }

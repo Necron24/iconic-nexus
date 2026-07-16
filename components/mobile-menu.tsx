@@ -15,6 +15,7 @@ export function MobileMenu({ signedIn, unread }: { signedIn: boolean; unread: nu
           <nav className="container-page flex flex-col gap-2">
             <Link onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 hover:bg-white/5" href="/discover">Discover</Link>
             <Link onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 hover:bg-white/5" href="/campaigns">Campaigns</Link>
+            <Link onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 hover:bg-white/5" href="/wall-of-fame">Wall of Fame</Link>
             {signedIn ? (
               <>
                 <Link onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 hover:bg-white/5" href="/dashboard">Dashboard</Link>

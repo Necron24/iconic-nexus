@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ImageIcon } from "lucide-react";
+import { FlaskConical, ImageIcon, Star, Users } from "lucide-react";
 
 type Project = {
   id: string;
@@ -11,6 +11,9 @@ type Project = {
   short_description: string;
   icon_url?: string | null;
   cover_url?: string | null;
+  active_campaign_count?: number;
+  approved_test_count?: number;
+  average_rating?: number | null;
 };
 
 export function ProjectCard({ project }: { project: Project }) {
@@ -45,7 +48,13 @@ export function ProjectCard({ project }: { project: Project }) {
           </div>
         </div>
 
-        <p className="mb-5 min-h-12 text-sm leading-6 text-soft">{project.short_description}</p>
+        <p className="mb-4 min-h-12 text-sm leading-6 text-soft">{project.short_description}</p>
+
+        <div className="mb-5 flex flex-wrap gap-3 text-xs text-soft">
+          <span className="flex items-center gap-1.5"><FlaskConical size={14} /> {project.active_campaign_count ?? 0} active</span>
+          <span className="flex items-center gap-1.5"><Users size={14} /> {project.approved_test_count ?? 0} tests</span>
+          <span className="flex items-center gap-1.5"><Star size={14} /> {project.average_rating ? Number(project.average_rating).toFixed(1) : "New"}</span>
+        </div>
 
         <Link href={`/projects/${project.slug}`} className="btn-secondary w-full">
           View project

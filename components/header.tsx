@@ -28,6 +28,7 @@ export async function Header() {
         <nav className="hidden items-center gap-6 text-sm font-semibold text-soft md:flex">
           <Link href="/discover" className="hover:text-white">Discover</Link>
           <Link href="/campaigns" className="hover:text-white">Campaigns</Link>
+          <Link href="/wall-of-fame" className="hover:text-white">Wall of Fame</Link>
           {user && <Link href="/dashboard" className="hover:text-white">Dashboard</Link>}
           <Link href="/help" className="hover:text-white">Help</Link>
         </nav>

@@ -30,16 +30,33 @@ export default async function DashboardPage() {
   const unread = unreadResult.count ?? 0;
 
   const stats = [
-    [Coins, "Current credits", String(profile?.credits ?? 0)],
-    [FolderKanban, "Your projects", String(projectsResult.count ?? 0)],
-    [Activity, "Tests completed", String(completedTestsResult.count ?? 0)],
-    [Star, "Tester reputation", Number(profile?.tester_reputation ?? 0).toFixed(1)]
+    [Coins, "Current credits", String(profile?.credits ?? 0), "/dashboard/credits"],
+    [FolderKanban, "Your projects", String(projectsResult.count ?? 0), "/dashboard/projects"],
+    [Activity, "Tests completed", String(completedTestsResult.count ?? 0), "/dashboard/testing"],
+    [Star, "Tester reputation", Number(profile?.tester_reputation ?? 0).toFixed(1), "/dashboard/profile"]
   ] as const;
   const name = profile?.display_name || profile?.username || user.email || "Creator";
 
   return <>
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm text-soft">Welcome back</p><h2 className="mt-1 text-2xl font-black">{name}</h2></div><Link href="/dashboard/projects/new" className="btn-primary gap-2"><Plus size={18}/> Add project</Link></div>
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{stats.map(([Icon,label,value])=><div key={label} className="card p-5"><Icon className="text-lime" size={22}/><p className="mt-4 text-sm text-soft">{label}</p><p className="mt-1 text-3xl font-black">{value}</p></div>)}</div>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {stats.map(([Icon, label, value, href]) => (
+        <Link
+          key={label}
+          href={href}
+          className="card group block p-5 transition hover:-translate-y-0.5 hover:border-cyan/35 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-cyan"
+        >
+          <Icon className="text-lime transition group-hover:scale-110" size={22} />
+          <p className="mt-4 text-sm text-soft">{label}</p>
+          <div className="mt-1 flex items-end justify-between gap-3">
+            <p className="text-3xl font-black">{value}</p>
+            <span className="text-sm font-bold text-cyan opacity-0 transition group-hover:opacity-100">
+              Open →
+            </span>
+          </div>
+        </Link>
+      ))}
+    </div>
     <div className="mt-6 grid gap-5 lg:grid-cols-2">
       <div className="card p-6"><h2 className="text-xl font-black">Campaign progress</h2>{activeCampaign?<><p className="mt-2 text-sm text-soft">{activeCampaign.title}</p><div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan" style={{width:`${progress}%`}}/></div><p className="mt-2 text-sm text-soft">{joinedCount} of {testerGoal} testers joined</p></>:<div className="mt-4 rounded-xl border border-dashed border-white/15 p-5 text-sm text-soft">You do not have an active testing campaign yet.</div>}</div>
       <div className="card p-6"><h2 className="text-xl font-black">Next actions</h2><div className="mt-4 space-y-3 text-sm text-soft">

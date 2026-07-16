@@ -16,10 +16,6 @@ function readInteger(data: FormData, name: string, min: number, max: number, pat
   return value;
 }
 
-function minimumReward(minutes: number, duration: number) {
-  return Math.max(25, Math.ceil(minutes / 15) * 10, duration >= 14 ? 50 : 25);
-}
-
 async function ownedProject(
   supabase: Awaited<ReturnType<typeof createClient>>,
   projectId: string,
@@ -50,9 +46,7 @@ export async function createCampaign(projectId: string, formData: FormData) {
   const testerGoal = readInteger(formData, "testerGoal", 1, 500, path);
   const durationDays = readInteger(formData, "durationDays", 1, 90, path);
   const minimumMinutes = readInteger(formData, "minimumMinutes", 1, 600, path);
-  const rewardCredits = readInteger(formData, "rewardCredits", 25, 1000, path);
-  const required = minimumReward(minimumMinutes, durationDays);
-  if (rewardCredits < required) fail(path, `This campaign requires at least ${required} credits per approved tester.`);
+  const rewardCredits = readInteger(formData, "rewardCredits", 1, 1000, path);
 
   const { data: campaignId, error } = await supabase.rpc("create_funded_testing_campaign", {
     p_project_id: project.id,
@@ -98,22 +92,7 @@ export async function updateCampaign(projectId: string, campaignId: string, form
   const testerGoal = readInteger(formData, "testerGoal", 1, 500, path);
   const durationDays = readInteger(formData, "durationDays", 1, 90, path);
   const minimumMinutes = readInteger(formData, "minimumMinutes", 1, 600, path);
-  const rewardCredits = readInteger(formData, "rewardCredits", 1, 1000, path);
-  const required = minimumReward(minimumMinutes, durationDays);
-  const currentRequired = minimumReward(currentCampaign.minimum_minutes, currentCampaign.duration_days);
-  const isLegacyCampaign = currentCampaign.reward_credits < currentRequired;
-  const legacySettingsUnchanged =
-    isLegacyCampaign &&
-    rewardCredits === currentCampaign.reward_credits &&
-    testerGoal === currentCampaign.tester_goal &&
-    durationDays === currentCampaign.duration_days &&
-    minimumMinutes === currentCampaign.minimum_minutes;
-
-  if (rewardCredits < required && !legacySettingsUnchanged) {
-    fail(
-      path,
-      isLegacyCampaign
-        ? `This legacy reward can only be retained while tester count, duration and minimum testing time remain unchanged. The updated campaign requires at least ${required} credits per approved tester.`
+  const rewardCredits = readInteger(formData, "rewardCredits", 1, 1000, path); credits per approved tester.`
         : `This campaign requires at least ${required} credits per approved tester.`
     );
   }

@@ -26,8 +26,8 @@ type Props = {
   spentCredits?: number;
 };
 
-function minimumReward(minutes: number, duration: number) {
-  return Math.max(25, Math.ceil(minutes / 15) * 10, duration >= 14 ? 50 : 25);
+function minimumReward() {
+  return 1;
 }
 
 export function CampaignForm({
@@ -44,7 +44,7 @@ export function CampaignForm({
   const originalTesterGoal = defaults?.testerGoal ?? 12;
   const originalDurationDays = defaults?.durationDays ?? 14;
   const originalMinimumMinutes = defaults?.minimumMinutes ?? 15;
-  const originalRewardCredits = defaults?.rewardCredits ?? 50;
+  const originalRewardCredits = defaults?.rewardCredits ?? 5;
   const originalRequiredReward = minimumReward(originalMinimumMinutes, originalDurationDays);
 
   const [testerGoal, setTesterGoal] = useState(originalTesterGoal);
@@ -140,7 +140,7 @@ export function CampaignForm({
             <p className="mt-1 text-sm text-soft">{budgetMessage}</p>
             {!rewardIsValid && (
               <p className="mt-2 text-sm text-red-200">
-                Set the reward to at least {requiredReward} credits, or restore all original legacy settings.
+                Set the reward to at least 1 credit.
               </p>
             )}
             {rewardIsValid && !canAfford && (
@@ -208,7 +208,7 @@ export function CampaignForm({
           <input
             name="rewardCredits"
             type="number"
-            min={isLegacyCampaign ? 1 : 25}
+            min={1}
             max={1000}
             value={rewardCredits}
             onChange={(event) => setRewardCredits(Number(event.target.value) || 1)}
@@ -216,9 +216,7 @@ export function CampaignForm({
             required
           />
           <span className="mt-2 block text-xs text-soft">
-            {legacyRewardAllowed
-              ? `Legacy reward retained. New settings require at least ${requiredReward} credits.`
-              : `For these settings, the minimum is ${requiredReward} credits.`}
+            Choose any whole-number reward from 1 to 1000 credits per approved tester.
           </span>
         </label>
 

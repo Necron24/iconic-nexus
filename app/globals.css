@@ -33,6 +33,26 @@ input, textarea, select {
   color: white;
 }
 
+select {
+  color-scheme: dark;
+  background-color: #1a2233;
+}
+
+select option,
+select optgroup {
+  color: #ffffff;
+  background-color: #111827;
+}
+
+select:focus option:checked {
+  color: #08111f;
+  background-color: #9eff3a;
+}
+
+input[type="number"] {
+  color-scheme: dark;
+}
+
 input[type="file"] {
   padding-top: 10px;
   padding-bottom: 10px;

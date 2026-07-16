@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   FlaskConical,
   MessageSquareText,
+  Newspaper,
   Pencil,
   Plus,
   Settings2,
@@ -166,6 +167,14 @@ export default async function DashboardProjectsPage({
                     >
                       <Pencil size={16} />
                       Edit
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/projects/${project.id}/updates`}
+                      className="btn-secondary !px-4 !py-2 gap-2"
+                    >
+                      <Newspaper size={16} />
+                      Devlogs
                     </Link>
 
                     <Link

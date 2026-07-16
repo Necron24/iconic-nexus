@@ -92,10 +92,7 @@ export async function updateCampaign(projectId: string, campaignId: string, form
   const testerGoal = readInteger(formData, "testerGoal", 1, 500, path);
   const durationDays = readInteger(formData, "durationDays", 1, 90, path);
   const minimumMinutes = readInteger(formData, "minimumMinutes", 1, 600, path);
-  const rewardCredits = readInteger(formData, "rewardCredits", 1, 1000, path); credits per approved tester.`
-        : `This campaign requires at least ${required} credits per approved tester.`
-    );
-  }
+  const rewardCredits = readInteger(formData, "rewardCredits", 1, 1000, path);
 
   const { error } = await supabase.rpc("update_funded_testing_campaign", {
     p_campaign_id: campaignId,

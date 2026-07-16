@@ -26,7 +26,7 @@ type Props = {
   spentCredits?: number;
 };
 
-function minimumReward() {
+function minimumReward(_minutes?: number, _duration?: number) {
   return 1;
 }
 
@@ -140,7 +140,7 @@ export function CampaignForm({
             <p className="mt-1 text-sm text-soft">{budgetMessage}</p>
             {!rewardIsValid && (
               <p className="mt-2 text-sm text-red-200">
-                Set the reward to at least 1 credit.
+                Set the reward to at least {requiredReward} credits, or restore all original legacy settings.
               </p>
             )}
             {rewardIsValid && !canAfford && (

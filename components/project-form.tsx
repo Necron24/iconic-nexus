@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ImagePlus, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -51,57 +52,6 @@ function validateImage(file: File, label: string): string | null {
   }
 
   return null;
-}
-
-function FilePreview({
-  file,
-  fallback,
-  alt,
-  className,
-}: {
-  file: File | null;
-  fallback?: string | null;
-  alt: string;
-  className: string;
-}) {
-  const [previewUrl, setPreviewUrl] = useState(fallback || "");
-
-  useEffect(() => {
-    if (!file) {
-      setPreviewUrl(fallback || "");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file, fallback]);
-
-  return previewUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={previewUrl} alt={alt} className={className} />
-  ) : (
-    <div className={`${className} grid place-items-center border border-dashed border-white/15 bg-white/5 text-soft`}>
-      <ImagePlus size={28} />
-    </div>
-  );
-}
-
-function ScreenshotPreview({ file }: { file: File }) {
-  const [url, setUrl] = useState("");
-
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-
-  if (!url) return null;
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt={file.name} className="h-36 w-full rounded-xl border border-white/10 object-cover" />
-  );
 }
 
 export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: ProjectFormProps) {
@@ -197,33 +147,20 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
         </label>
 
         <div>
-          <span className="label">Project icon</span>
-          <FilePreview file={iconFile} fallback={removeIcon ? null : defaults.icon_url} alt="Icon preview" className="h-28 w-28 rounded-2xl object-cover" />
-          <input
+          <ImageUploadField
             name="iconFile"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="mt-3 block w-full text-sm text-soft file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:font-bold file:text-ink"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0] ?? null;
-              if (!file) {
-                setIconFile(null);
-                setMediaError(null);
-                return;
-              }
-
-              const error = validateImage(file, "Project icon") || validateTotal(file, coverFile, screenshots);
-              if (error) {
-                event.currentTarget.value = "";
-                setIconFile(null);
-                setMediaError(error);
-                return;
-              }
-
-              setIconFile(file);
+            label="Project icon"
+            helpText="PNG, JPG or WebP · maximum 2 MB"
+            maxBytesPerFile={MAX_IMAGE_BYTES}
+            existingPreview={removeIcon ? null : defaults.icon_url}
+            aspect="square"
+            validateSelection={(files) => validateTotal(files[0] || null, coverFile, screenshots)}
+            onAccepted={(files) => {
+              setIconFile(files[0] || null);
               setRemoveIcon(false);
               setMediaError(null);
             }}
+            onCleared={() => setIconFile(null)}
           />
           {defaults.icon_url && (
             <label className="mt-3 flex items-center gap-2 text-sm text-soft">
@@ -231,37 +168,23 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
               Remove current icon
             </label>
           )}
-          <p className="mt-2 text-xs text-soft">PNG, JPG or WebP. Maximum 2 MB.</p>
         </div>
 
         <div>
-          <span className="label">Cover image</span>
-          <FilePreview file={coverFile} fallback={removeCover ? null : defaults.cover_url} alt="Cover preview" className="h-28 w-full rounded-2xl object-cover" />
-          <input
+          <ImageUploadField
             name="coverFile"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="mt-3 block w-full text-sm text-soft file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:font-bold file:text-ink"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0] ?? null;
-              if (!file) {
-                setCoverFile(null);
-                setMediaError(null);
-                return;
-              }
-
-              const error = validateImage(file, "Cover image") || validateTotal(iconFile, file, screenshots);
-              if (error) {
-                event.currentTarget.value = "";
-                setCoverFile(null);
-                setMediaError(error);
-                return;
-              }
-
-              setCoverFile(file);
+            label="Cover image"
+            helpText="Landscape works best · maximum 2 MB"
+            maxBytesPerFile={MAX_IMAGE_BYTES}
+            existingPreview={removeCover ? null : defaults.cover_url}
+            aspect="wide"
+            validateSelection={(files) => validateTotal(iconFile, files[0] || null, screenshots)}
+            onAccepted={(files) => {
+              setCoverFile(files[0] || null);
               setRemoveCover(false);
               setMediaError(null);
             }}
+            onCleared={() => setCoverFile(null)}
           />
           {defaults.cover_url && (
             <label className="mt-3 flex items-center gap-2 text-sm text-soft">
@@ -269,7 +192,6 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
               Remove current cover
             </label>
           )}
-          <p className="mt-2 text-xs text-soft">Landscape works best. Maximum 2 MB.</p>
         </div>
 
         {defaults.screenshots?.length ? (
@@ -290,54 +212,23 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
           </div>
         ) : null}
 
-        <div className="sm:col-span-2">
-          <span className="label">Add screenshots</span>
-          <input
-            name="screenshotFiles"
-            type="file"
-            multiple
-            accept="image/png,image/jpeg,image/webp"
-            className="block w-full text-sm text-soft file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:font-bold file:text-ink"
-            onChange={(event) => {
-              const files = Array.from(event.currentTarget.files ?? []);
-
-              if (files.length > MAX_SCREENSHOTS) {
-                event.currentTarget.value = "";
-                setScreenshots([]);
-                setMediaError(`You selected ${files.length} screenshots. Select no more than ${MAX_SCREENSHOTS}.`);
-                return;
-              }
-
-              const invalid = files.map((file, index) => validateImage(file, `Screenshot ${index + 1}`)).find(Boolean);
-              const error = invalid || validateTotal(iconFile, coverFile, files);
-
-              if (error) {
-                event.currentTarget.value = "";
-                setScreenshots([]);
-                setMediaError(error);
-                return;
-              }
-
-              setScreenshots(files);
-              setMediaError(null);
-            }}
-          />
-          <p className="mt-2 text-xs text-soft">Up to 10 images. Maximum 2 MB each and 4 MB total for all newly selected images.</p>
-
-          {selectedTotal > 0 && (
-            <p className={`mt-2 text-xs font-bold ${selectedTotal > MAX_TOTAL_UPLOAD_BYTES ? "text-red-300" : "text-cyan"}`}>
-              Selected upload total: {formatBytes(selectedTotal)} / 4 MB
-            </p>
-          )}
-
-          {screenshots.length > 0 && (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {screenshots.map((file) => (
-                <ScreenshotPreview key={`${file.name}-${file.lastModified}-${file.size}`} file={file} />
-              ))}
-            </div>
-          )}
-        </div>
+        <ImageUploadField
+          name="screenshotFiles"
+          label="Add screenshots"
+          helpText="Up to 10 images · 2 MB each · 4 MB total with icon and cover"
+          multiple
+          maxFiles={MAX_SCREENSHOTS}
+          maxBytesPerFile={MAX_IMAGE_BYTES}
+          maxTotalBytes={MAX_TOTAL_UPLOAD_BYTES}
+          aspect="gallery"
+          className="sm:col-span-2"
+          validateSelection={(files) => validateTotal(iconFile, coverFile, files)}
+          onAccepted={(files) => {
+            setScreenshots(files);
+            setMediaError(null);
+          }}
+          onCleared={() => setScreenshots([])}
+        />
 
         <label className="sm:col-span-2">
           <span className="label">Known issues</span>

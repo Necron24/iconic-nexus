@@ -1,4 +1,7 @@
+"use client";
+
 import { Send } from "lucide-react";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 type Props = {
   action: (formData: FormData) => void | Promise<void>;
@@ -39,7 +42,17 @@ export function FeedbackForm({ action, totalMinutes, minimumMinutes, error }: Pr
         <label className="sm:col-span-2"><span className="label">What worked well? *</span><textarea name="whatWorked" className="field min-h-32 resize-y" maxLength={3000} required /></label>
         <label className="sm:col-span-2"><span className="label">What was confusing or difficult? *</span><textarea name="whatWasConfusing" className="field min-h-32 resize-y" maxLength={3000} required /></label>
         <label className="sm:col-span-2"><span className="label">Bug details</span><textarea name="bugDetails" className="field min-h-32 resize-y" maxLength={4000} placeholder="Steps to reproduce, expected result and actual result." /></label>
-        <label className="sm:col-span-2"><span className="label">Screenshots (optional, max 5)</span><input name="attachments" type="file" accept="image/png,image/jpeg,image/webp" multiple className="field" /></label>
+        <ImageUploadField
+          name="attachments"
+          label="Screenshots (optional)"
+          helpText="Up to 5 images · maximum 5 MB each"
+          multiple
+          maxFiles={5}
+          maxBytesPerFile={5 * 1024 * 1024}
+          maxTotalBytes={20 * 1024 * 1024}
+          aspect="gallery"
+          className="sm:col-span-2"
+        />
       </div>
       <button type="submit" disabled={!ready} className="btn-primary mt-6 gap-2 disabled:cursor-not-allowed disabled:opacity-40"><Send size={17} /> Submit feedback</button>
     </form>

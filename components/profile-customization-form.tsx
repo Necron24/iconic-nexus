@@ -3,7 +3,8 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Github, Globe2, ImagePlus, MapPin, Palette, Sparkles } from "lucide-react";
+import { ExternalLink, Github, Globe2, MapPin, Palette, Sparkles } from "lucide-react";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 const colours = [
   ["lime", "Lime", "#9EFF3A"],
@@ -167,48 +168,48 @@ export function ProfileCustomizationForm({
         </section>
 
         <section className="card grid gap-5 p-6 md:grid-cols-2">
-          <label>
-            <span className="label flex items-center gap-2"><ImagePlus size={16} /> Profile image</span>
-            <input
+          <div>
+            <ImageUploadField
               name="avatar"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="field"
-              onChange={(e) => {
-                const file = e.currentTarget.files?.[0] || null;
-                setAvatarFile(file);
-                if (file) setRemoveAvatar(false);
+              label="Profile image"
+              helpText="PNG, JPG or WebP · maximum 3 MB"
+              maxBytesPerFile={3 * 1024 * 1024}
+              existingPreview={removeAvatar ? null : profile.avatar_url}
+              aspect="square"
+              onAccepted={(files) => {
+                setAvatarFile(files[0] || null);
+                setRemoveAvatar(false);
               }}
+              onCleared={() => setAvatarFile(null)}
             />
-            <span className="mt-2 block text-xs text-soft">PNG, JPG or WebP · maximum 3 MB</span>
             {(profile.avatar_url || avatarFile) && (
               <label className="mt-3 flex items-center gap-2 text-sm text-soft">
                 <input type="checkbox" name="removeAvatar" checked={removeAvatar} onChange={(e) => setRemoveAvatar(e.currentTarget.checked)} />
                 Remove current avatar
               </label>
             )}
-          </label>
-          <label>
-            <span className="label flex items-center gap-2"><ImagePlus size={16} /> Page banner</span>
-            <input
+          </div>
+          <div>
+            <ImageUploadField
               name="banner"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="field"
-              onChange={(e) => {
-                const file = e.currentTarget.files?.[0] || null;
-                setBannerFile(file);
-                if (file) setRemoveBanner(false);
+              label="Page banner"
+              helpText="Wide image recommended · maximum 5 MB"
+              maxBytesPerFile={5 * 1024 * 1024}
+              existingPreview={removeBanner ? null : profile.banner_url}
+              aspect="wide"
+              onAccepted={(files) => {
+                setBannerFile(files[0] || null);
+                setRemoveBanner(false);
               }}
+              onCleared={() => setBannerFile(null)}
             />
-            <span className="mt-2 block text-xs text-soft">Wide image recommended · maximum 5 MB</span>
             {(profile.banner_url || bannerFile) && (
               <label className="mt-3 flex items-center gap-2 text-sm text-soft">
                 <input type="checkbox" name="removeBanner" checked={removeBanner} onChange={(e) => setRemoveBanner(e.currentTarget.checked)} />
                 Remove current banner
               </label>
             )}
-          </label>
+          </div>
         </section>
 
         <section className="card grid gap-5 p-6 sm:grid-cols-2">

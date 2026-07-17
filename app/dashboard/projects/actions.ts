@@ -8,7 +8,8 @@ import { validateImageFile } from "@/lib/security/image-file";
 const validTypes = new Set(["app", "game"]);
 const validStages = new Set(["prototype", "alpha", "beta", "released"]);
 const allowedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
-const maxFileSize = 5 * 1024 * 1024;
+const maxFileSize = 2 * 1024 * 1024;
+const maxTotalUploadSize = 4 * 1024 * 1024;
 const bucketName = "project-media";
 
 function fail(path: string, message: string): never {
@@ -46,7 +47,7 @@ function cleanFileName(name: string): string {
 function asImageFile(value: FormDataEntryValue | null, path: string, label: string): File | null {
   if (!(value instanceof File) || value.size === 0) return null;
   if (!allowedMimeTypes.has(value.type)) fail(path, `${label} must be a PNG, JPG or WebP image.`);
-  if (value.size > maxFileSize) fail(path, `${label} may not exceed 5 MB.`);
+  if (value.size > maxFileSize) fail(path, `${label} may not exceed 2 MB.`);
   return value;
 }
 
@@ -143,6 +144,9 @@ export async function createProject(formData: FormData) {
 
   if (screenshotFiles.length > 10) fail(path, "You may upload a maximum of 10 screenshots.");
 
+  const totalUploadSize = (iconFile?.size ?? 0) + (coverFile?.size ?? 0) + screenshotFiles.reduce((total, file) => total + file.size, 0);
+  if (totalUploadSize > maxTotalUploadSize) fail(path, "All newly selected project images together may not exceed 4 MB.");
+
   const slug = await uniqueSlug(supabase, fields.name);
   const { data: project, error } = await supabase
     .from("projects")
@@ -217,6 +221,9 @@ export async function updateProject(projectId: string, formData: FormData) {
   const removeScreenshotIds = formData.getAll("removeScreenshotIds").map(String);
   const removeIcon = formData.get("removeIcon") === "true";
   const removeCover = formData.get("removeCover") === "true";
+
+  const totalUploadSize = (iconFile?.size ?? 0) + (coverFile?.size ?? 0) + screenshotFiles.reduce((total, file) => total + file.size, 0);
+  if (totalUploadSize > maxTotalUploadSize) fail(path, "All newly selected project images together may not exceed 4 MB.");
 
   const { data: currentImages } = await supabase
     .from("project_images")

@@ -139,7 +139,7 @@ export function ProfileCustomizationForm({
             </div>
           </div>
 
-          <div className="grid gap-6 p-6 lg:grid-cols-[1.2fr_.8fr]">
+          <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_minmax(390px,auto)] lg:items-start">
             <div>
               <p className="text-sm text-soft">{previewBio}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-sm text-soft">
@@ -149,16 +149,16 @@ export function ProfileCustomizationForm({
                 {socialUrl && <span className="badge gap-2"><ExternalLink size={14} />Social link</span>}
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[390px]">
+              <div className="min-w-0 rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
                 <p className="text-xs uppercase tracking-[.2em] text-soft">Projects</p>
-                <p className="mt-2 text-2xl font-black" style={{ color: accent }}>Portfolio</p>
+                <p className="mt-2 break-words text-xl font-black xl:text-2xl" style={{ color: accent }}>Portfolio</p>
               </div>
-              <div className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
+              <div className="min-w-0 rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
                 <p className="text-xs uppercase tracking-[.2em] text-soft">Reputation</p>
                 <p className="mt-2 text-2xl font-black" style={{ color: accent }}>4.8</p>
               </div>
-              <div className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
+              <div className="min-w-0 rounded-2xl border bg-white/5 p-4" style={{ borderColor: `${accent}44` }}>
                 <p className="text-xs uppercase tracking-[.2em] text-soft">Accent</p>
                 <div className="mt-2 flex items-center gap-2"><span className="h-5 w-5 rounded-full border border-white/20" style={{ backgroundColor: accent }} /><span className="font-bold">{colours.find(([value]) => value === accentColor)?.[1] || "Lime"}</span></div>
               </div>

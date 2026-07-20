@@ -44,7 +44,7 @@ export function CampaignForm({
   const originalTesterGoal = defaults?.testerGoal ?? 12;
   const originalDurationDays = defaults?.durationDays ?? 14;
   const originalMinimumMinutes = defaults?.minimumMinutes ?? 15;
-  const originalRewardCredits = defaults?.rewardCredits ?? 5;
+  const originalRewardCredits = defaults?.rewardCredits ?? 1;
   const originalRequiredReward = minimumReward(originalMinimumMinutes, originalDurationDays);
 
   const [testerGoal, setTesterGoal] = useState(originalTesterGoal);

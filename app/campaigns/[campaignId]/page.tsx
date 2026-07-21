@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, CheckCircle2, Clock3, Coins, ExternalLink, Users } from "lucide-react";
 import { joinCampaign } from "@/app/dashboard/campaigns/actions";
 import { createClient } from "@/lib/supabase/server";
+import { CreatorTag } from "@/components/campaigns/creator-tag";
 
 export default async function CampaignPage({
   params,
@@ -18,13 +19,14 @@ export default async function CampaignPage({
 
   const { data: campaign } = await supabase
     .from("testing_campaigns")
-    .select("id, project_id, title, instructions, minimum_minutes, tester_goal, reward_credits, duration_days, starts_at, ends_at, status, projects!inner(id, owner_id, name, slug, platform, stage, short_description, icon_url, cover_url, testing_url, is_published)")
+    .select("id, project_id, title, instructions, minimum_minutes, tester_goal, reward_credits, duration_days, starts_at, ends_at, status, projects!inner(id, owner_id, name, slug, platform, stage, short_description, icon_url, cover_url, testing_url, is_published, profiles!projects_owner_id_fkey(username, display_name, avatar_url, role))")
     .eq("id", campaignId)
     .maybeSingle();
 
   if (!campaign) notFound();
   const project = Array.isArray(campaign.projects) ? campaign.projects[0] : campaign.projects;
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
+  const creator = Array.isArray(project.profiles) ? project.profiles[0] : project.profiles;
 
   const { data: joinedCount } = await supabase.rpc("get_campaign_member_count", {
     p_campaign_id: campaign.id
@@ -81,6 +83,13 @@ export default async function CampaignPage({
                 </div>
                 <h1 className="text-4xl font-black md:text-5xl">{campaign.title}</h1>
                 <Link href={`/projects/${project.slug}`} className="mt-2 inline-block font-bold text-cyan hover:underline">{project.name}</Link>
+                <CreatorTag
+                  username={creator?.username ?? null}
+                  displayName={creator?.display_name ?? null}
+                  avatarUrl={creator?.avatar_url ?? null}
+                  role={creator?.role ?? null}
+                  className="mt-4 w-full max-w-md"
+                />
               </div>
             </div>
 

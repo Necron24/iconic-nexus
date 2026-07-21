@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { CreatorTag } from "@/components/campaigns/creator-tag";
 
 const PAGE_SIZE = 10;
 
@@ -23,6 +24,10 @@ export type BrowseCampaign = {
   short_description: string;
   icon_url: string | null;
   joined_count: number;
+  creator_username: string | null;
+  creator_display_name: string | null;
+  creator_avatar_url: string | null;
+  creator_role: string | null;
 };
 
 type Filters = { search: string; platform: string; stage: string; sort: string };
@@ -122,6 +127,14 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                     <h2 className="text-2xl font-black">{campaign.title}</h2>
                     <p className="mt-1 font-semibold text-white/80">{campaign.project_name}</p>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-soft">{campaign.short_description}</p>
+                    <CreatorTag
+                      username={campaign.creator_username}
+                      displayName={campaign.creator_display_name}
+                      avatarUrl={campaign.creator_avatar_url}
+                      role={campaign.creator_role}
+                      compact
+                      className="mt-4 w-full max-w-md"
+                    />
                     <div className="mt-4 flex flex-wrap gap-4 text-sm text-soft">
                       <span className="flex items-center gap-2"><Users size={16} /> {joined}/{campaign.tester_goal} testers</span>
                       <span className="flex items-center gap-2"><CalendarDays size={16} /> {daysLeft} days left</span>

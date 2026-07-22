@@ -147,10 +147,15 @@ export async function reviewFeedback(membershipId: string, campaignId: string, p
   if (!user) redirect("/login");
   const decision = String(formData.get("decision") ?? "");
   const note = String(formData.get("reviewNote") ?? "").trim();
+  const helpful = formData.get("developerHelpful") === "true";
   if (!["approve", "reject"].includes(decision)) fail(path, "Choose approve or request changes.");
   if (decision === "reject" && note.length < 10) fail(path, "Explain clearly what must be changed before requesting changes.");
   const { error } = await supabase.rpc("review_testing_feedback", { p_member_id: membershipId, p_approve: decision === "approve", p_review_note: note || null });
   if (error) fail(path, error.message);
+  if (decision === "approve") {
+    const { error: helpfulError } = await supabase.from("feedback_reports").update({ developer_helpful: helpful }).eq("campaign_member_id", membershipId);
+    if (helpfulError) fail(path, helpfulError.message);
+  }
   revalidatePath(path); revalidatePath("/dashboard"); revalidatePath("/dashboard/testing"); revalidatePath("/dashboard/credits");
   redirect(`${path}?success=${encodeURIComponent(decision === "approve" ? "Feedback approved and credits awarded." : "Feedback returned to the tester. They may appeal the decision.")}`);
 }

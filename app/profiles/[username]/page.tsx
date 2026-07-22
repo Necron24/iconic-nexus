@@ -19,7 +19,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const supabase = await createClient();
   const { data: p } = await supabase
     .from('profiles')
-    .select('id,username,display_name,avatar_url,banner_url,bio,headline,country,role,tester_reputation,accent_color,website_url,github_url,social_url,created_at')
+    .select('id,username,display_name,avatar_url,banner_url,bio,headline,country,role,tester_reputation,developer_reputation,accent_color,website_url,github_url,social_url,created_at')
     .eq('username', username)
     .maybeSingle();
 
@@ -111,17 +111,23 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
           {p.bio && <p className="mt-7 max-w-3xl whitespace-pre-wrap text-lg leading-8 text-soft">{p.bio}</p>}
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ['Published projects', projects?.length || 0],
               ['Approved tests', tests || 0],
-              ['Tester reputation', Number(p.tester_reputation || 0).toFixed(1)]
+              ['Tester reputation', `${Number(p.tester_reputation || 0).toFixed(1)}/5`],
+              ['Developer reputation', `${Number(p.developer_reputation || 0).toFixed(1)}/5`]
             ].map(([label, value]) => (
               <div key={String(label)} className="rounded-2xl border bg-white/5 p-5" style={{ borderColor: `${accent}44` }}>
                 <p className="text-sm text-soft">{label}</p>
                 <p className="mt-2 text-3xl font-black" style={{ color: accent }}>{value}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {Number(p.tester_reputation || 0) >= 4.5 && <span className="badge border-lime/30 bg-lime/10 text-lime">Trusted Tester</span>}
+            {Number(p.developer_reputation || 0) >= 4.5 && <span className="badge border-cyan/30 bg-cyan/10 text-cyan">Trusted Developer</span>}
           </div>
         </div>
       </div>

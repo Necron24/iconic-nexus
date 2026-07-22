@@ -3,74 +3,33 @@ import { redirect } from "next/navigation";
 import {
   FlaskConical,
   MessageSquareText,
-  Newspaper,
   Pencil,
   Plus,
   Settings2,
-  Users,
+  Users
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
-type ProjectRow = {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  stage: string;
-  platform: string;
-  is_published: boolean;
-  icon_url: string | null;
-};
-
-type CampaignRow = {
-  id: string;
-  project_id: string;
-  title: string;
-  status: string;
-};
-
 export default async function DashboardProjectsPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<{ success?: string; error?: string }>;
 }) {
-  const { success, error: queryError } = await searchParams;
+  const { success, error } = await searchParams;
   const supabase = await createClient();
-
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  const { data: projects, error: projectsError } = await supabase
+  const { data: projects } = await supabase
     .from("projects")
-    .select("id,name,slug,type,stage,platform,is_published,icon_url")
+    .select(
+      "id,name,slug,type,stage,platform,is_published,icon_url,testing_campaigns(id,title,status,campaign_members(id,status))"
+    )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
-
-  const projectRows = (projects ?? []) as ProjectRow[];
-  const projectIds = projectRows.map((project) => project.id);
-
-  let campaigns: CampaignRow[] = [];
-  let campaignsErrorMessage: string | null = null;
-
-  if (projectIds.length > 0) {
-    const { data: campaignData, error: campaignsError } = await supabase
-      .from("testing_campaigns")
-      .select("id,project_id,title,status")
-      .in("project_id", projectIds)
-      .order("created_at", { ascending: false });
-
-    if (campaignsError) {
-      campaignsErrorMessage = campaignsError.message;
-    } else {
-      campaigns = (campaignData ?? []) as CampaignRow[];
-    }
-  }
-
-  const visibleError =
-    queryError ?? projectsError?.message ?? campaignsErrorMessage;
 
   return (
     <div>
@@ -94,13 +53,13 @@ export default async function DashboardProjectsPage({
         </div>
       )}
 
-      {visibleError && (
+      {error && (
         <div className="mb-4 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">
-          We could not load all project information: {visibleError}
+          {error}
         </div>
       )}
 
-      {projectRows.length === 0 ? (
+      {(projects ?? []).length === 0 ? (
         <div className="card p-10 text-center">
           <h3 className="text-2xl font-black">No projects yet</h3>
           <Link href="/dashboard/projects/new" className="btn-primary mt-6">
@@ -109,11 +68,9 @@ export default async function DashboardProjectsPage({
         </div>
       ) : (
         <div className="space-y-4">
-          {projectRows.map((project) => {
-            const projectCampaigns = campaigns.filter(
-              (campaign) => campaign.project_id === project.id
-            );
-            const activeCampaigns = projectCampaigns.filter(
+          {(projects ?? []).map((project) => {
+            const campaigns = project.testing_campaigns ?? [];
+            const activeCampaigns = campaigns.filter(
               (campaign) => campaign.status === "active"
             ).length;
 
@@ -122,6 +79,7 @@ export default async function DashboardProjectsPage({
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-center gap-4">
                     {project.icon_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={project.icon_url}
                         alt={`${project.name} icon`}
@@ -138,8 +96,15 @@ export default async function DashboardProjectsPage({
                         <span className="badge">{project.type}</span>
                         <span className="badge">{project.platform}</span>
                         <span className="badge">{project.stage}</span>
-                        <span className="badge">
-                          {project.is_published ? "Published" : "Draft"}
+
+                        <span
+                          className={
+                            project.is_published
+                              ? "badge border-lime/30 bg-lime/10 text-lime"
+                              : "badge border-amber-300/30 bg-amber-300/10 text-amber-100"
+                          }
+                        >
+                          {project.is_published ? "Published" : "Unpublished"}
                         </span>
                       </div>
 
@@ -147,8 +112,7 @@ export default async function DashboardProjectsPage({
 
                       <p className="mt-2 flex items-center gap-2 text-sm text-soft">
                         <Users size={15} />
-                        {activeCampaigns} active campaign
-                        {activeCampaigns === 1 ? "" : "s"}
+                        {activeCampaigns} active campaigns
                       </p>
                     </div>
                   </div>
@@ -170,14 +134,6 @@ export default async function DashboardProjectsPage({
                     </Link>
 
                     <Link
-                      href={`/dashboard/projects/${project.id}/updates`}
-                      className="btn-secondary !px-4 !py-2 gap-2"
-                    >
-                      <Newspaper size={16} />
-                      Devlogs
-                    </Link>
-
-                    <Link
                       href={`/dashboard/projects/${project.id}/campaigns/new`}
                       className="btn-primary !px-4 !py-2 gap-2"
                     >
@@ -187,44 +143,55 @@ export default async function DashboardProjectsPage({
                   </div>
                 </div>
 
-                {projectCampaigns.length > 0 && (
+                {campaigns.length > 0 && (
                   <div className="mt-5 border-t border-white/10 pt-4">
                     <p className="mb-3 text-sm font-bold text-soft">
                       Campaign management
                     </p>
 
                     <div className="space-y-2">
-                      {projectCampaigns.map((campaign) => (
-                        <div
-                          key={campaign.id}
-                          className="flex flex-col gap-2 rounded-xl bg-white/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div>
-                            <p className="font-semibold">{campaign.title}</p>
-                            <p className="mt-1 text-xs text-soft">
-                              Status: {campaign.status}
-                            </p>
-                          </div>
+                      {campaigns.map((campaign) => {
+                        const submitted = (
+                          campaign.campaign_members ?? []
+                        ).filter(
+                          (membership) => membership.status === "submitted"
+                        ).length;
 
-                          <div className="flex flex-wrap gap-2">
-                            <Link
-                              href={`/dashboard/projects/${project.id}/campaigns/${campaign.id}/manage`}
-                              className="btn-secondary !px-3 !py-2 gap-2"
-                            >
-                              <Settings2 size={15} />
-                              Manage
-                            </Link>
+                        return (
+                          <div
+                            key={campaign.id}
+                            className="flex flex-col gap-2 rounded-xl bg-white/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div>
+                              <p className="font-semibold">{campaign.title}</p>
+                              <p className="mt-1 text-xs text-soft">
+                                Status: {campaign.status}
+                                {submitted > 0
+                                  ? ` · ${submitted} awaiting review`
+                                  : ""}
+                              </p>
+                            </div>
 
-                            <Link
-                              href={`/dashboard/projects/${project.id}/campaigns/${campaign.id}/feedback`}
-                              className="btn-secondary !px-3 !py-2 gap-2"
-                            >
-                              <MessageSquareText size={15} />
-                              Feedback
-                            </Link>
+                            <div className="flex flex-wrap gap-2">
+                              <Link
+                                href={`/dashboard/projects/${project.id}/campaigns/${campaign.id}/manage`}
+                                className="btn-secondary !px-3 !py-2 gap-2"
+                              >
+                                <Settings2 size={15} />
+                                Manage
+                              </Link>
+
+                              <Link
+                                href={`/dashboard/projects/${project.id}/campaigns/${campaign.id}/feedback`}
+                                className="btn-secondary !px-3 !py-2 gap-2"
+                              >
+                                <MessageSquareText size={15} />
+                                Feedback
+                              </Link>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

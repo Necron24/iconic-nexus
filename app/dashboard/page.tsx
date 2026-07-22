@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Activity, Bell, Coins, FolderKanban, MessageSquareText, Plus, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -8,7 +9,7 @@ export default async function DashboardPage() {
   if (!user) return null;
 
   const [profileResult, projectsResult, completedTestsResult, campaignsResult, reviewsResult, activeTestsResult, unreadResult] = await Promise.all([
-    supabase.from("profiles").select("credits, tester_reputation, display_name, username").eq("id", user.id).single(),
+    supabase.from("profiles").select("credits, tester_reputation, display_name, username, country, bio, role").eq("id", user.id).single(),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).eq("status", "approved"),
     supabase.from("testing_campaigns").select("id, title, tester_goal, projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
@@ -36,8 +37,34 @@ export default async function DashboardPage() {
     [Star, "Tester reputation", Number(profile?.tester_reputation ?? 0).toFixed(1), "/dashboard/profile"]
   ] as const;
   const name = profile?.display_name || profile?.username || user.email || "Creator";
+  const role = profile?.role === "tester" || profile?.role === "developer" ? profile.role : "both";
+  const profileComplete = Boolean(profile?.display_name && profile?.username && profile?.country && profile?.bio);
+  const projectCount = projectsResult.count ?? 0;
+  const completedTests = completedTestsResult.count ?? 0;
+  const activeCampaignCountForOwner = campaignsResult.data?.length ?? 0;
+
+  const testerChecklist = [
+    { label: "Complete your profile", description: "Add a public name, country and bio so creators know who is testing.", complete: profileComplete, href: "/dashboard/profile" },
+    { label: "Browse testing campaigns", description: "Find an app or game that matches your device and interests.", complete: activeTests > 0 || completedTests > 0, href: "/campaigns" },
+    { label: "Join your first campaign", description: "Read every requirement before joining and starting the test.", complete: activeTests > 0 || completedTests > 0, href: "/dashboard/testing" },
+    { label: "Complete your first approved test", description: "Submit useful feedback and earn your first campaign reward.", complete: completedTests > 0, href: "/dashboard/testing" }
+  ];
+
+  const creatorChecklist = [
+    { label: "Complete your profile", description: "Add a public identity so testers know who is behind the project.", complete: profileComplete, href: "/dashboard/profile" },
+    { label: "Create your first project", description: "Add an app or game with clear details, links and media.", complete: projectCount > 0, href: "/dashboard/projects/new" },
+    { label: "Publish your project", description: "Unpublished projects remain private and cannot appear publicly.", complete: false, href: "/dashboard/projects" },
+    { label: "Create your first active campaign", description: "Set requirements, testing time, tester goal and reward.", complete: activeCampaignCountForOwner > 0, href: "/dashboard/projects" }
+  ];
+
+  const checklistItems = role === "tester"
+    ? testerChecklist
+    : role === "developer"
+      ? creatorChecklist
+      : [...testerChecklist.slice(0, 2), ...creatorChecklist.slice(1)];
 
   return <>
+    <OnboardingChecklist title={role === "tester" ? "Start testing on Iconic Nexus" : role === "developer" ? "Launch your first testing campaign" : "Set up your Iconic Nexus workspace"} items={checklistItems} />
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm text-soft">Welcome back</p><h2 className="mt-1 text-2xl font-black">{name}</h2></div><Link href="/dashboard/projects/new" className="btn-primary gap-2"><Plus size={18}/> Add project</Link></div>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map(([Icon, label, value, href]) => (

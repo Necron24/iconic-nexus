@@ -22,14 +22,15 @@ export default async function TestingWorkspace({ params, searchParams }: { param
   const project = Array.isArray(campaign.projects) ? campaign.projects[0] : campaign.projects;
   if (!project) notFound();
 
-  const [{ data: sessions }, { data: report }, { data: dispute }] = await Promise.all([
+  const [{ data: sessions }, { data: report }, { data: dispute }, { data: invalidTest }] = await Promise.all([
     supabase.from("test_sessions").select("id,minutes_tested,device_name,os_version,notes,created_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }),
     supabase.from("feedback_reports").select("id,overall_rating,developer_helpful,review_note,reviewed_at,review_due_at").eq("campaign_member_id", membershipId).maybeSingle(),
-    supabase.from("feedback_disputes").select("id,status,reason,resolution_note,created_at,resolved_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }).limit(1).maybeSingle()
+    supabase.from("feedback_disputes").select("id,status,reason,resolution_note,created_at,resolved_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("invalid_test_reports").select("id,status,category,reason,resolution,resolution_note,created_at,resolved_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }).limit(1).maybeSingle()
   ]);
 
   const total = (sessions ?? []).reduce((sum, s) => sum + s.minutes_tested, 0);
-  const locked = ["submitted", "approved"].includes(membership.status);
+  const locked = ["submitted", "approved", "rejected"].includes(membership.status);
   const changesRequested = membership.status === "in_progress" && Boolean(report?.review_note && report?.reviewed_at);
   const canAppeal = changesRequested && (!dispute || dispute.status === "resolved");
 
@@ -50,9 +51,21 @@ export default async function TestingWorkspace({ params, searchParams }: { param
 
     <div className="card mb-6 p-6"><h3 className="text-xl font-black">Testing instructions</h3><p className="mt-3 whitespace-pre-wrap leading-7 text-soft">{campaign.instructions}</p></div>
 
-    {membership.status === "submitted" && <div className="card mb-6 p-6">
+    {membership.status === "submitted" && invalidTest?.status !== "open" && <div className="card mb-6 p-6">
       <p className="flex items-center gap-2 text-lg font-black text-cyan"><Clock3/> Feedback awaiting review</p>
-      <p className="mt-3 text-soft">The developer can approve or request changes. If no action is taken by {report?.review_due_at ? new Date(report.review_due_at).toLocaleString("en-ZA") : "the review deadline"}, the report is eligible for automatic approval.</p>
+      <p className="mt-3 text-soft">The developer can approve or request specific changes. If no action is taken by {report?.review_due_at ? new Date(report.review_due_at).toLocaleString("en-ZA") : "the review deadline"}, the report is eligible for automatic approval.</p>
+    </div>}
+
+    {membership.status === "submitted" && invalidTest?.status === "open" && <div className="mb-6 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-6">
+      <p className="flex items-center gap-2 text-lg font-black text-amber-100"><Scale/> Administrator review in progress</p>
+      <p className="mt-3 text-amber-100/80">The developer reported this test as potentially invalid. They cannot reject it or take back the reserved reward themselves. An administrator will review the campaign requirements, your submitted feedback and the developer explanation.</p>
+      <p className="mt-4 rounded-xl bg-black/20 p-4 text-sm text-amber-50"><strong>Reported category:</strong> {invalidTest.category.replaceAll("_", " ")}<br/><strong>Developer explanation:</strong> {invalidTest.reason}</p>
+    </div>}
+
+    {membership.status === "rejected" && <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-400/10 p-6">
+      <p className="flex items-center gap-2 text-lg font-black text-red-100"><AlertTriangle/> Test marked invalid after admin review</p>
+      <p className="mt-3 text-red-100/80">An administrator upheld the invalid-test report, so no reward was paid.</p>
+      {invalidTest?.resolution_note && <p className="mt-4 rounded-xl bg-black/20 p-4 text-sm text-red-50"><strong>Admin decision:</strong> {invalidTest.resolution_note}</p>}
     </div>}
 
     {membership.status === "approved" && <div className="card mb-6 p-6"><p className="flex items-center gap-2 text-lg font-black text-lime"><CheckCircle2/> Feedback approved</p><p className="mt-3 text-soft">The developer approved your report and your Nexus Credits were awarded.</p>{report?.review_note && <p className="mt-4 rounded-xl bg-white/5 p-4 text-sm text-soft"><strong className="text-white">Developer note:</strong> {report.review_note}</p>}</div>}

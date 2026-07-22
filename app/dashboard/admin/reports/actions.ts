@@ -56,3 +56,25 @@ export async function resolveDispute(formData: FormData) {
   revalidatePath("/dashboard/testing");
   revalidatePath("/dashboard/credits");
 }
+
+export async function resolveInvalidTest(formData: FormData) {
+  const reportId = String(formData.get("invalidReportId") || "");
+  const decision = String(formData.get("decision") || "");
+  const note = String(formData.get("resolutionNote") || "").trim();
+  if (!["approve_tester", "uphold_invalid"].includes(decision)) {
+    redirect("/dashboard/admin/reports?error=Choose%20a%20valid%20invalid-test%20decision.");
+  }
+  if (note.length < 10) {
+    redirect("/dashboard/admin/reports?error=Add%20a%20clear%20resolution%20note.");
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_resolve_invalid_test", {
+    p_report_id: reportId,
+    p_approve_tester: decision === "approve_tester",
+    p_resolution_note: note
+  });
+  if (error) redirect(`/dashboard/admin/reports?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/dashboard/admin/reports");
+  revalidatePath("/dashboard/testing");
+  revalidatePath("/dashboard/credits");
+}

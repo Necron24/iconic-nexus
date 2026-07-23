@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AlertTriangle, Coins, ShieldCheck } from "lucide-react";
+import { SubmitButton } from "@/components/submit-button";
 
 type Defaults = {
   title?: string;
@@ -245,9 +246,7 @@ export function CampaignForm({
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Link href={cancelHref} className="btn-secondary">Cancel</Link>
-        <button type="submit" disabled={!canAfford || !rewardIsValid} className="btn-primary disabled:cursor-not-allowed disabled:opacity-40">
-          {submitLabel}
-        </button>
+        <SubmitButton disabled={!canAfford || !rewardIsValid} idleText={submitLabel} pendingText={submitLabel.toLowerCase().includes("create") ? "Creating campaign…" : "Saving campaign…"} />
       </div>
     </form>
   );

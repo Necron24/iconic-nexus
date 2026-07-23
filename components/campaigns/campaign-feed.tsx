@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, Search, Users } from "lucide-react";
+import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, RefreshCw, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 
 const PAGE_SIZE = 10;
+const POLL_MS = 60000;
 
 export type BrowseCampaign = {
   id: string;
@@ -39,10 +40,15 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
   const [applied, setApplied] = useState(defaults);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [newCount, setNewCount] = useState(0);
   const [hasMore, setHasMore] = useState(initialCampaigns.length === PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
   const requestId = useRef(0);
+  const campaignIds = useRef(new Set(initialCampaigns.map((campaign) => campaign.id)));
+
+  useEffect(() => { campaignIds.current = new Set(campaigns.map((campaign) => campaign.id)); }, [campaigns]);
 
   const fetchRows = useCallback(async (offset: number, replace: boolean, current: Filters) => {
     const id = ++requestId.current;
@@ -63,7 +69,8 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
       return;
     }
     const rows = ((data ?? []) as BrowseCampaign[]).map((row) => ({ ...row, joined_count: Number(row.joined_count ?? 0) }));
-    setCampaigns((currentRows) => replace ? rows : [...currentRows, ...rows]);
+    setCampaigns((currentRows) => replace ? rows : Array.from(new Map([...currentRows, ...rows].map((row) => [row.id, row])).values()));
+    if (replace) setNewCount(0);
     setHasMore(rows.length === PAGE_SIZE);
     setLoading(false);
   }, [supabase]);
@@ -79,6 +86,22 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
     void fetchRows(campaigns.length, false, applied);
   }, [applied, campaigns.length, fetchRows, hasMore, loading]);
 
+
+  const checkForUpdates = useCallback(async () => {
+    if (loading || checking) return;
+    setChecking(true);
+    const { data } = await supabase.rpc("browse_campaigns", {
+      p_search: applied.search.trim() || null, p_platform: applied.platform || null,
+      p_stage: applied.stage || null, p_sort: applied.sort, p_limit: PAGE_SIZE, p_offset: 0
+    });
+    const rows = ((data ?? []) as BrowseCampaign[]);
+    setNewCount(rows.filter((row) => !campaignIds.current.has(row.id)).length);
+    if (!hasMore && campaigns.length <= PAGE_SIZE) setCampaigns(rows.map((row) => ({ ...row, joined_count: Number(row.joined_count ?? 0) })));
+    setChecking(false);
+  }, [applied, campaigns.length, checking, hasMore, loading, supabase]);
+
+  const showNew = useCallback(() => { window.scrollTo({ top: 0, behavior: "smooth" }); void fetchRows(0, true, applied); }, [applied, fetchRows]);
+
   useEffect(() => {
     const node = sentinel.current;
     if (!node || !hasMore) return;
@@ -89,8 +112,18 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => void checkForUpdates(), POLL_MS);
+    const refresh = () => void checkForUpdates();
+    const visibility = () => { if (document.visibilityState === "visible") refresh(); };
+    window.addEventListener("focus", refresh); window.addEventListener("online", refresh); document.addEventListener("visibilitychange", visibility);
+    const channel = supabase.channel("campaigns-live").on("postgres_changes", { event: "*", schema: "public", table: "testing_campaigns" }, refresh).subscribe();
+    return () => { window.clearInterval(interval); window.removeEventListener("focus", refresh); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", visibility); void supabase.removeChannel(channel); };
+  }, [checkForUpdates, supabase]);
+
   return (
     <>
+      {newCount > 0 && <button type="button" onClick={showNew} className="sticky top-20 z-30 mx-auto mb-5 flex items-center gap-2 rounded-full border border-cyan/40 bg-[#07101f]/95 px-5 py-3 font-bold text-cyan shadow-2xl backdrop-blur"><RefreshCw size={17}/>{newCount} new campaign{newCount === 1 ? "" : "s"} available — show now</button>}
       <div className="card mb-8 grid gap-4 p-5 md:grid-cols-[minmax(240px,1.5fr)_1fr_1fr_1fr_auto]">
         <label className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-soft" size={18} />
@@ -105,8 +138,9 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
         <select className="field" value={filters.sort} onChange={(e) => setFilters((v) => ({ ...v, sort: e.target.value }))}>
           <option value="newest">Newest</option><option value="ending_soon">Ending soon</option><option value="highest_reward">Highest reward</option><option value="spaces_left">Most spaces left</option>
         </select>
-        <button type="button" className="btn-primary gap-2" onClick={apply}><Filter size={17} /> Apply</button>
+        <button type="button" disabled={loading} className="btn-primary gap-2 disabled:opacity-50" onClick={apply}>{loading ? <LoaderCircle className="animate-spin" size={17}/> : <Filter size={17} />} Apply</button>
       </div>
+      <p className="mb-5 text-right text-xs text-soft">{checking ? "Checking for new campaigns…" : "Live updates on"}</p>
 
       {error && <div className="mb-6 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">Campaigns could not be loaded: {error}</div>}
 

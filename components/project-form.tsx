@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { ImageUploadField } from "@/components/image-upload-field";
+import { SubmitButton } from "@/components/submit-button";
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -246,9 +247,7 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Link href={cancelHref} className="btn-secondary">Cancel</Link>
-        <button type="submit" disabled={Boolean(mediaError)} className="btn-primary disabled:cursor-not-allowed disabled:opacity-50">
-          {submitLabel}
-        </button>
+        <SubmitButton disabled={Boolean(mediaError)} idleText={submitLabel} pendingText={submitLabel.toLowerCase().includes("create") ? "Creating project…" : "Saving project…"} />
       </div>
     </form>
   );

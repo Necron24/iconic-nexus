@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/submit-button";
 import { Clock3 } from "lucide-react";
 
 type Props = {
@@ -34,7 +35,7 @@ export function TestSessionForm({ action, error }: Props) {
           <textarea name="notes" className="field min-h-28 resize-y" maxLength={1500} placeholder="What did you test during this session?" />
         </label>
       </div>
-      <button type="submit" className="btn-primary mt-6">Save session</button>
+      <SubmitButton className="btn-primary mt-6" idleText="Save session" pendingText="Saving session…" />
     </form>
   );
 }

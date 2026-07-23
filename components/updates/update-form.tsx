@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/submit-button";
 
 type UpdateValues = {
   title?: string;
@@ -68,7 +69,7 @@ export function UpdateForm({
       </label>
 
       <div className="flex flex-wrap gap-3">
-        <button type="submit" className="btn-primary">{submitLabel}</button>
+        <SubmitButton idleText={submitLabel} pendingText="Publishing update…" />
         <Link href={cancelHref} className="btn-secondary">Cancel</Link>
       </div>
     </form>

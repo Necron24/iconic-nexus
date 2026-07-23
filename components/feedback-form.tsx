@@ -1,6 +1,7 @@
 "use client";
 
 import { Send } from "lucide-react";
+import { SubmitButton } from "@/components/submit-button";
 import { ImageUploadField } from "@/components/image-upload-field";
 
 type Props = {
@@ -54,7 +55,7 @@ export function FeedbackForm({ action, totalMinutes, minimumMinutes, error }: Pr
           className="sm:col-span-2"
         />
       </div>
-      <button type="submit" disabled={!ready} className="btn-primary mt-6 gap-2 disabled:cursor-not-allowed disabled:opacity-40"><Send size={17} /> Submit feedback</button>
+      <SubmitButton disabled={!ready} className="btn-primary mt-6" icon={<Send size={17} />} idleText="Submit feedback" pendingText="Submitting feedback…" />
     </form>
   );
 }

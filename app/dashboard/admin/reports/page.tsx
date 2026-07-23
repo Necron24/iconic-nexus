@@ -68,7 +68,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                 <p className="text-xs font-bold uppercase tracking-wider text-amber-200">Testing evidence</p>
                 <p className="mt-3 text-soft">Logged time: <strong className="text-white">{r.total_minutes || 0} minutes</strong></p>
                 <p className="mt-2 text-soft">Sessions: <strong className="text-white">{r.session_count || 0}</strong></p>
-                <a href={`/dashboard/testing/${r.campaign_member_id}`} className="btn-secondary mt-4 inline-flex">Open full test record</a>
+                <a href={`/dashboard/admin/reports/invalid-tests/${r.id}`} className="btn-secondary mt-4 inline-flex">Open full test record</a>
               </div>
             </div>
 

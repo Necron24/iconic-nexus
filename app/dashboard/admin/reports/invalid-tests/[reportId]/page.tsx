@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   CalendarClock,
@@ -73,7 +73,50 @@ export default async function AdminInvalidTestRecordPage({
     p_report_id: reportId
   });
 
-  if (error || !data) notFound();
+  if (error) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Link
+          href="/dashboard/admin/reports"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-cyan hover:underline"
+        >
+          <ArrowLeft size={17} />
+          Back to Safety and moderation
+        </Link>
+        <div className="card border border-red-400/30 p-6">
+          <h1 className="text-2xl font-black text-red-200">Test record could not be loaded</h1>
+          <p className="mt-3 text-soft">
+            The admin database function returned an error instead of hiding the problem behind a 404.
+          </p>
+          <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-xl bg-black/30 p-4 text-sm text-red-100">
+            {error.message}
+          </pre>
+          <p className="mt-4 text-xs text-soft">Report ID: {reportId}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Link
+          href="/dashboard/admin/reports"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-cyan hover:underline"
+        >
+          <ArrowLeft size={17} />
+          Back to Safety and moderation
+        </Link>
+        <div className="card p-6">
+          <h1 className="text-2xl font-black">Invalid-test report not found</h1>
+          <p className="mt-3 text-soft">
+            The route exists, but no invalid-test report with this ID could be found.
+          </p>
+          <p className="mt-4 text-xs text-soft">Report ID: {reportId}</p>
+        </div>
+      </div>
+    );
+  }
 
   const record = data as InvalidTestCase;
   const sessions = Array.isArray(record.sessions) ? record.sessions : [];

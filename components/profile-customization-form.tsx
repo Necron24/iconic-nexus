@@ -88,7 +88,77 @@ export function ProfileCustomizationForm({ profile, saveAction, restartAction }:
 
       <section className="card p-6"><h3 className="flex items-center gap-2 text-xl font-black"><Palette size={20}/>Accent colour</h3><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{colours.map(([value,label,hex])=><label key={value} className="cursor-pointer"><input type="radio" className="peer sr-only" name="accentColor" value={value} checked={accentColor===value} onChange={()=>setAccentColor(value)}/><span className="flex items-center gap-2 rounded-xl border p-3" style={accentColor===value?{borderColor:hex,backgroundColor:`${hex}22`,boxShadow:`0 0 18px ${hex}22`}:{borderColor:"rgba(255,255,255,.10)"}}><span className="h-5 w-5 rounded-full" style={{backgroundColor:hex}}/><span className="text-sm font-semibold">{label}</span></span></label>)}</div></section>
 
-      <section className="card p-6"><h3 className="flex items-center gap-2 text-xl font-black"><LayoutTemplate size={20}/>Page appearance</h3><p className="mt-2 text-sm text-soft">Mix and match the style controls below. Your preview updates immediately.</p><div className="mt-6 space-y-6"><div><span className="label">Profile theme</span><ChoiceGrid name="profileTheme" value={theme} setValue={setTheme} options={themes}/></div><div><span className="label">Card style</span><ChoiceGrid name="profileCardStyle" value={cardStyle} setValue={setCardStyle} options={cardStyles}/></div><div><span className="label">Banner overlay</span><ChoiceGrid name="bannerOverlay" value={bannerOverlay} setValue={setBannerOverlay} options={bannerOverlays}/></div><div><span className="label">Avatar shape</span><ChoiceGrid name="avatarShape" value={avatarShape} setValue={setAvatarShape} options={avatarShapes}/></div><div><span className="label">Button style</span><ChoiceGrid name="profileButtonStyle" value={buttonStyle} setValue={setButtonStyle} options={buttonStyles}/></div><div><span className="label">Profile layout</span><ChoiceGrid name="profileLayout" value={layout} setValue={setLayout} options={layouts}/></div></div></section>
+      <section className="card p-6">
+        <h3 className="flex items-center gap-2 text-xl font-black"><LayoutTemplate size={20}/>Page appearance</h3>
+        <p className="mt-2 text-sm text-soft">Mix and match the style controls below. The small page preview updates immediately.</p>
+
+        <div className="mt-6 grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-6">
+            <div><span className="label">Profile theme</span><ChoiceGrid name="profileTheme" value={theme} setValue={setTheme} options={themes}/></div>
+            <div><span className="label">Card style</span><ChoiceGrid name="profileCardStyle" value={cardStyle} setValue={setCardStyle} options={cardStyles}/></div>
+            <div><span className="label">Banner overlay</span><ChoiceGrid name="bannerOverlay" value={bannerOverlay} setValue={setBannerOverlay} options={bannerOverlays}/></div>
+            <div><span className="label">Avatar shape</span><ChoiceGrid name="avatarShape" value={avatarShape} setValue={setAvatarShape} options={avatarShapes}/></div>
+            <div><span className="label">Button style</span><ChoiceGrid name="profileButtonStyle" value={buttonStyle} setValue={setButtonStyle} options={buttonStyles}/></div>
+            <div><span className="label">Profile layout</span><ChoiceGrid name="profileLayout" value={layout} setValue={setLayout} options={layouts}/></div>
+          </div>
+
+          <aside className="xl:sticky xl:top-24 xl:self-start">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-bold uppercase tracking-[.18em] text-cyan">Page preview</p>
+              <span className="text-xs text-soft">Live</span>
+            </div>
+
+            <div
+              className={`overflow-hidden border ${previewShell}`}
+              style={{
+                ...style,
+                borderColor: cardStyle === "borderless" ? "transparent" : `${accent}66`,
+                boxShadow: theme === "neon" ? `0 0 42px ${accent}30` : `0 0 24px ${accent}16`,
+                borderRadius: cardStyle === "compact" ? ".9rem" : "1.35rem"
+              }}
+            >
+              <div className="relative h-36 overflow-hidden border-b border-white/10">
+                {effectiveBanner ? (
+                  <img src={effectiveBanner} alt="Small profile banner preview" className={`h-full w-full object-cover ${bannerOverlay === "blur" ? "scale-105 blur-sm" : ""}`}/>
+                ) : (
+                  <div className="h-full w-full" style={{background:`radial-gradient(circle at 20% 22%, ${accent}55, transparent 30%), linear-gradient(135deg,#16233b,#071127 68%)`}}/>
+                )}
+                {bannerOverlay !== "none" && <div className={`absolute inset-0 ${bannerOverlay === "dark" ? "bg-black/55" : bannerOverlay === "blur" ? "bg-black/25 backdrop-blur-[2px]" : "bg-gradient-to-t from-[#0c1323] via-[#0c132380] to-transparent"}`}/>} 
+                <div className="absolute inset-x-0 bottom-0 h-0.5" style={{background:`linear-gradient(90deg,transparent,${accent},transparent)`}}/>
+              </div>
+
+              <div className="relative px-5 pb-5">
+                <div className="-mt-9 flex items-end gap-3">
+                  {effectiveAvatar ? (
+                    <img src={effectiveAvatar} alt="Small avatar preview" className={`h-20 w-20 border-4 border-[#11192b] object-cover shadow-xl ${avatarClass}`}/>
+                  ) : (
+                    <div className={`grid h-20 w-20 place-items-center border-4 border-[#11192b] text-2xl font-black text-ink ${avatarClass}`} style={{backgroundColor:accent}}>{previewName[0]?.toUpperCase()||"I"}</div>
+                  )}
+                  <div className="min-w-0 pb-1">
+                    <h4 className="truncate text-xl font-black">{previewName}</h4>
+                    <p className="truncate text-sm text-white/65">@{previewUsername}</p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm font-semibold" style={{color:accent}}>{headline || "Your headline will appear here."}</p>
+                <p className="mt-2 line-clamp-3 text-sm text-soft">{bio || "Tell visitors what you build and what kind of testing you do."}</p>
+
+                <div className={`mt-4 grid gap-2 ${layout === "creator" ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {(layout === "creator" ? ["Projects","Reputation"] : ["Projects","Reputation","Badges"]).map((item,index)=><div key={item} className="rounded-xl border bg-white/[0.04] p-3" style={{borderColor:`${accent}3d`}}><p className="text-[10px] text-soft">{item}</p><p className="mt-1 text-xs font-black" style={{color:accent}}>{index===0?"Portfolio":index===1?"4.8":"Trusted"}</p></div>)}
+                </div>
+
+                <button
+                  type="button"
+                  className={`mt-4 w-full rounded-xl px-4 py-2.5 text-sm font-black ${buttonStyle === "solid" ? "text-ink" : "text-white"}`}
+                  style={buttonStyle === "solid" ? {backgroundColor:accent} : buttonStyle === "outline" ? {border:`1px solid ${accent}`,background:"transparent"} : {border:`1px solid ${accent}55`,background:`${accent}18`,backdropFilter:"blur(12px)"}}
+                >
+                  View profile
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
 
       <section className="card grid gap-5 p-6 sm:grid-cols-2"><label><span className="label">Website</span><input name="websiteUrl" type="url" value={websiteUrl} onChange={e=>setWebsiteUrl(e.target.value)} className="field"/></label><label><span className="label">GitHub</span><input name="githubUrl" type="url" value={githubUrl} onChange={e=>setGithubUrl(e.target.value)} className="field"/></label><label className="sm:col-span-2"><span className="label">Other social/profile link</span><input name="socialUrl" type="url" value={socialUrl} onChange={e=>setSocialUrl(e.target.value)} className="field"/></label></section>
 

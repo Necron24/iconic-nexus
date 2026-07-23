@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function DiscoverPage() {
   const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase.rpc("browse_projects", {
     p_search: null,
     p_type: null,
@@ -29,7 +33,7 @@ export default async function DiscoverPage() {
         <p className="mt-3 text-soft">Search, filter and keep scrolling through published indie apps and games.</p>
       </div>
       {error && <div className="mb-6 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">Initial projects could not be loaded: {error.message}</div>}
-      <DiscoverFeed initialProjects={projects} />
+      <DiscoverFeed initialProjects={projects} currentUserId={user?.id ?? null} />
     </section>
   );
 }

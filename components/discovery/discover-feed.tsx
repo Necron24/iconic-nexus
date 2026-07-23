@@ -22,6 +22,10 @@ export type DiscoverProject = {
   active_campaign_count: number;
   approved_test_count: number;
   average_rating: number | null;
+  owner_id: string;
+  owner_username: string | null;
+  owner_display_name: string | null;
+  owner_avatar_url: string | null;
 };
 
 type Filters = {
@@ -42,7 +46,13 @@ const initialFilters: Filters = {
   sort: "updated"
 };
 
-export function DiscoverFeed({ initialProjects }: { initialProjects: DiscoverProject[] }) {
+export function DiscoverFeed({
+  initialProjects,
+  currentUserId
+}: {
+  initialProjects: DiscoverProject[];
+  currentUserId?: string | null;
+}) {
   const supabase = useMemo(() => createClient(), []);
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [applied, setApplied] = useState<Filters>(initialFilters);
@@ -202,7 +212,13 @@ export function DiscoverFeed({ initialProjects }: { initialProjects: DiscoverPro
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => <ProjectCard key={project.id} project={project} />)}
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              currentUserId={currentUserId}
+            />
+          ))}
         </div>
       )}
 

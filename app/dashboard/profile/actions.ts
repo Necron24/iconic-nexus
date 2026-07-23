@@ -6,7 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { validateImageFile } from "@/lib/security/image-file";
 
 const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
-const accents = new Set(["lime", "cyan", "violet", "amber", "rose", "blue"]);
+const accents = new Set(["lime", "cyan", "violet", "amber", "rose", "blue", "emerald", "orange", "red", "pink", "indigo", "teal"]);
+const themes = new Set(["default", "neon", "glass", "minimal", "dark_pro"]);
+const cardStyles = new Set(["rounded", "compact", "glass", "borderless"]);
+const bannerOverlays = new Set(["gradient", "dark", "blur", "none"]);
+const avatarShapes = new Set(["rounded", "circle", "hexagon"]);
+const buttonStyles = new Set(["solid", "outline", "glass"]);
+const layouts = new Set(["standard", "creator"]);
 
 function fail(message: string): never {
   redirect(`/dashboard/profile?error=${encodeURIComponent(message)}`);
@@ -47,6 +53,12 @@ export async function updateProfile(formData: FormData) {
   const websiteInput = String(formData.get('websiteUrl') || '').trim();
   const githubInput = String(formData.get('githubUrl') || '').trim();
   const socialInput = String(formData.get('socialUrl') || '').trim();
+  const profileTheme = String(formData.get('profileTheme') || 'default');
+  const profileCardStyle = String(formData.get('profileCardStyle') || 'rounded');
+  const bannerOverlay = String(formData.get('bannerOverlay') || 'gradient');
+  const avatarShape = String(formData.get('avatarShape') || 'rounded');
+  const profileButtonStyle = String(formData.get('profileButtonStyle') || 'solid');
+  const profileLayout = String(formData.get('profileLayout') || 'standard');
 
   if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) fail('Username must be 3–30 characters and use only letters, numbers or underscores.');
   if (displayName.length > 80) fail('Display name is too long.');
@@ -54,6 +66,7 @@ export async function updateProfile(formData: FormData) {
   if (bio.length > 1000) fail('Bio may not exceed 1000 characters.');
   if (!['tester', 'developer', 'both'].includes(role)) fail('Choose a valid role.');
   if (!accents.has(accentColor)) fail('Choose a valid accent colour.');
+  if (!themes.has(profileTheme) || !cardStyles.has(profileCardStyle) || !bannerOverlays.has(bannerOverlay) || !avatarShapes.has(avatarShape) || !buttonStyles.has(profileButtonStyle) || !layouts.has(profileLayout)) fail('Choose valid profile appearance options.');
 
   const websiteUrl = safeUrl(websiteInput);
   const githubUrl = safeUrl(githubInput);
@@ -87,6 +100,19 @@ export async function updateProfile(formData: FormData) {
     website_url: websiteUrl,
     github_url: githubUrl,
     social_url: socialUrl,
+    profile_theme: profileTheme,
+    profile_card_style: profileCardStyle,
+    banner_overlay: bannerOverlay,
+    avatar_shape: avatarShape,
+    profile_button_style: profileButtonStyle,
+    profile_layout: profileLayout,
+    show_website: formData.get('showWebsite') === 'on',
+    show_github: formData.get('showGithub') === 'on',
+    show_social: formData.get('showSocial') === 'on',
+    show_projects: formData.get('showProjects') === 'on',
+    show_reputation: formData.get('showReputation') === 'on',
+    show_badges: formData.get('showBadges') === 'on',
+    show_testing_stats: formData.get('showTestingStats') === 'on',
     updated_at: new Date().toISOString()
   }).eq('id', user.id);
 

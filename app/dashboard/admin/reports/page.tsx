@@ -14,7 +14,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const [{ data: reports }, { data: disputes }, { data: invalidTests }, { data: users }, { data: projects }] = await Promise.all([
     supabase.from("reports").select("id,target_type,target_id,reason,details,resolved,resolution_note,created_at,profiles!reports_reporter_id_fkey(username)").order("created_at", { ascending: false }).limit(100),
     supabase.from("feedback_disputes").select("id,status,reason,resolution_note,created_at,campaign_member_id,profiles!feedback_disputes_opened_by_fkey(username,display_name),campaign_members!inner(id,tester_id,testing_campaigns!inner(id,title,reward_credits,projects!inner(id,name,owner_id)))").order("created_at", { ascending: false }).limit(100),
-    supabase.from("invalid_test_reports").select("id,status,category,reason,resolution,resolution_note,created_at,campaign_member_id,profiles!invalid_test_reports_reported_by_fkey(username,display_name),campaign_members!inner(id,tester_id,profiles!campaign_members_tester_id_fkey(username,display_name),testing_campaigns!inner(id,title,instructions,reward_credits,projects!inner(id,name,owner_id)))").order("created_at", { ascending: false }).limit(100),
+    supabase.rpc("admin_list_invalid_test_reports"),
     supabase.from("profiles").select("id,username,display_name,account_status,suspension_reason,is_admin").order("created_at", { ascending: false }).limit(50),
     supabase.from("projects").select("id,name,slug,moderation_status,moderation_reason,profiles!projects_owner_id_fkey(username)").order("created_at", { ascending: false }).limit(50)
   ]);
@@ -31,15 +31,55 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
       <div className="mt-4 space-y-4">
         {(invalidTests || []).length === 0 && <div className="card p-6 text-soft">No invalid-test reports yet.</div>}
         {(invalidTests || []).map((r: any) => {
-          const reporter = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
-          const member = Array.isArray(r.campaign_members) ? r.campaign_members[0] : r.campaign_members;
-          const tester = Array.isArray(member?.profiles) ? member.profiles[0] : member?.profiles;
-          const campaign = Array.isArray(member?.testing_campaigns) ? member.testing_campaigns[0] : member?.testing_campaigns;
-          const project = Array.isArray(campaign?.projects) ? campaign.projects[0] : campaign?.projects;
           return <article key={r.id} className="card p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xl font-black">{project?.name || "Project"} · {campaign?.title || "Campaign"}</p><p className="mt-1 text-sm text-soft">Developer: {reporter?.display_name || reporter?.username || "unknown"} · Tester: {tester?.display_name || tester?.username || "unknown"} · Reward {campaign?.reward_credits || 0}</p></div><span className="badge capitalize">{r.status}</span></div>
-            <div className="mt-4 grid gap-4 lg:grid-cols-2"><div className="rounded-xl bg-white/5 p-4"><p className="text-xs font-bold uppercase tracking-wider text-red-200">Report category</p><p className="mt-2 font-bold capitalize">{String(r.category).replaceAll("_"," ")}</p><p className="mt-3 whitespace-pre-wrap text-soft">{r.reason}</p></div><div className="rounded-xl bg-white/5 p-4"><p className="text-xs font-bold uppercase tracking-wider text-cyan">Campaign requirements</p><p className="mt-3 whitespace-pre-wrap text-soft">{campaign?.instructions || "No instructions available."}</p></div></div>
-            {r.status === "open" ? <form action={resolveInvalidTest} className="mt-5 space-y-4"><input type="hidden" name="invalidReportId" value={r.id}/><label><span className="label">Admin resolution</span><textarea name="resolutionNote" required minLength={10} maxLength={2000} className="field min-h-28 resize-y" placeholder="Explain why the test is valid or invalid."/></label><div className="flex flex-wrap gap-3"><button name="decision" value="approve_tester" className="btn-primary">Approve tester and pay reward</button><button name="decision" value="uphold_invalid" className="btn-secondary">Uphold invalid-test report</button></div></form> : <p className="mt-4 rounded-xl bg-white/5 p-4 text-sm text-soft"><strong className="text-white">Resolution:</strong> {r.resolution_note || r.resolution || "Resolved"}</p>}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xl font-black">{r.project_name || "Project"} · {r.campaign_title || "Campaign"}</p>
+                <p className="mt-1 text-sm text-soft">
+                  Developer: {r.developer_display_name || r.developer_username || "unknown"} · Tester: {r.tester_display_name || r.tester_username || "unknown"} · Reward {r.reward_credits || 0}
+                </p>
+                <p className="mt-1 text-xs text-soft">Submitted {new Date(r.created_at).toLocaleString("en-ZA")}</p>
+              </div>
+              <span className="badge capitalize">{r.status}</span>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl bg-white/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-red-200">Developer report</p>
+                <p className="mt-2 font-bold capitalize">{String(r.category).replaceAll("_", " ")}</p>
+                <p className="mt-3 whitespace-pre-wrap text-soft">{r.reason}</p>
+              </div>
+              <div className="rounded-xl bg-white/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-cyan">Campaign requirements</p>
+                <p className="mt-3 whitespace-pre-wrap text-soft">{r.campaign_instructions || "No instructions available."}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl bg-white/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-lime">Submitted feedback</p>
+                <p className="mt-3 text-sm font-bold text-white">What worked</p>
+                <p className="mt-1 whitespace-pre-wrap text-soft">{r.what_worked || "Not supplied."}</p>
+                <p className="mt-3 text-sm font-bold text-white">What was confusing</p>
+                <p className="mt-1 whitespace-pre-wrap text-soft">{r.what_was_confusing || "Not supplied."}</p>
+                {r.bug_details && <><p className="mt-3 text-sm font-bold text-white">Bug details</p><p className="mt-1 whitespace-pre-wrap text-soft">{r.bug_details}</p></>}
+              </div>
+              <div className="rounded-xl bg-white/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-amber-200">Testing evidence</p>
+                <p className="mt-3 text-soft">Logged time: <strong className="text-white">{r.total_minutes || 0} minutes</strong></p>
+                <p className="mt-2 text-soft">Sessions: <strong className="text-white">{r.session_count || 0}</strong></p>
+                <a href={`/dashboard/testing/${r.campaign_member_id}`} className="btn-secondary mt-4 inline-flex">Open full test record</a>
+              </div>
+            </div>
+
+            {r.status === "open" ? <form action={resolveInvalidTest} className="mt-5 space-y-4">
+              <input type="hidden" name="invalidReportId" value={r.id}/>
+              <label><span className="label">Admin resolution</span><textarea name="resolutionNote" required minLength={10} maxLength={2000} className="field min-h-28 resize-y" placeholder="Explain why the test is valid or invalid."/></label>
+              <div className="flex flex-wrap gap-3">
+                <button name="decision" value="approve_tester" className="btn-primary">Approve tester and pay reward</button>
+                <button name="decision" value="uphold_invalid" className="btn-secondary">Uphold invalid-test report</button>
+              </div>
+            </form> : <p className="mt-4 rounded-xl bg-white/5 p-4 text-sm text-soft"><strong className="text-white">Resolution:</strong> {r.resolution_note || r.resolution || "Resolved"}</p>}
           </article>;
         })}
       </div>

@@ -12,6 +12,9 @@ type Project = {
   icon_url?: string | null;
   cover_url?: string | null;
   active_campaign_count?: number;
+  active_campaign_id?: string | null;
+  active_campaign_reward?: number | null;
+  active_campaign_spots_left?: number | null;
   approved_test_count?: number;
   average_rating?: number | null;
   owner_id?: string | null;
@@ -32,6 +35,11 @@ export function ProjectCard({
     project.owner_display_name?.trim() ||
     project.owner_username?.trim() ||
     "Iconic Nexus creator";
+
+  const activeCampaignCount = Number(project.active_campaign_count ?? 0);
+  const activeCampaignReward = Number(project.active_campaign_reward ?? 0);
+  const activeCampaignSpotsLeft = Number(project.active_campaign_spots_left ?? 0);
+  const hasActiveCampaign = activeCampaignCount > 0 && Boolean(project.active_campaign_id);
 
   const ownerBadge = isOwnProject ? (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-lime/40 bg-lime/15 px-3 py-1.5 text-xs font-black text-lime shadow-lg backdrop-blur-md">
@@ -65,6 +73,11 @@ export function ProjectCard({
     </span>
   );
 
+  const campaignBadgeText =
+    activeCampaignCount > 1
+      ? `${activeCampaignCount} active campaigns`
+      : `Testing · ${activeCampaignReward} credit${activeCampaignReward === 1 ? "" : "s"}`;
+
   return (
     <article className="card overflow-hidden">
       <div className="relative grid h-40 place-items-center overflow-hidden bg-white/5">
@@ -76,7 +89,23 @@ export function ProjectCard({
         )}
 
         {(isOwnProject || project.owner_username || project.owner_display_name) && (
-          <div className="absolute left-3 top-3">{ownerBadge}</div>
+          <div className="absolute left-3 top-3 max-w-[58%]">{ownerBadge}</div>
+        )}
+
+        {hasActiveCampaign && (
+          <Link
+            href={`/campaigns/${project.active_campaign_id}`}
+            className="absolute right-3 top-3 inline-flex max-w-[58%] flex-col items-end rounded-xl border border-cyan/40 bg-ink/85 px-3 py-2 text-right shadow-lg backdrop-blur-md transition hover:border-lime/60 hover:bg-ink"
+            aria-label={`Open active testing campaign for ${project.name}`}
+          >
+            <span className="inline-flex items-center gap-1.5 text-xs font-black text-cyan">
+              <FlaskConical size={13} />
+              {campaignBadgeText}
+            </span>
+            <span className="mt-0.5 text-[10px] font-bold text-white/75">
+              {activeCampaignSpotsLeft} spot{activeCampaignSpotsLeft === 1 ? "" : "s"} left
+            </span>
+          </Link>
         )}
       </div>
 
@@ -110,7 +139,7 @@ export function ProjectCard({
 
         <div className="mb-5 flex flex-wrap gap-3 text-xs text-soft">
           <span className="flex items-center gap-1.5">
-            <FlaskConical size={14} /> {project.active_campaign_count ?? 0} active
+            <FlaskConical size={14} /> {activeCampaignCount} active
           </span>
           <span className="flex items-center gap-1.5">
             <Users size={14} /> {project.approved_test_count ?? 0} tests

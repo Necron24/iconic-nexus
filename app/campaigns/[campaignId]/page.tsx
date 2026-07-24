@@ -20,6 +20,7 @@ import { joinCampaign } from "@/app/dashboard/campaigns/actions";
 import { createClient } from "@/lib/supabase/server";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 import { ShareButton } from "@/components/share-button";
+import { PrivateCampaignJoinForm } from "@/components/private-campaign-join-form";
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
@@ -404,17 +405,14 @@ export default async function CampaignPage({
                 <div className="mt-6 rounded-xl bg-white/5 p-4 text-sm text-soft">
                   This campaign has reached its tester goal.
                 </div>
+              ) : campaign.is_private ? (
+                <PrivateCampaignJoinForm
+                  action={joinAction}
+                  pageAccessCode={suppliedCode}
+                  signedIn={Boolean(user)}
+                />
               ) : (
                 <form action={joinAction} className="mt-6">
-                  {campaign.is_private && (
-                    <input type="hidden" name="accessCode" value={suppliedCode} />
-                  )}
-                  {campaign.is_private && suppliedCode && (
-                    <div className="mb-4 rounded-xl border border-cyan/25 bg-cyan/10 p-4 text-sm text-cyan">
-                      <p className="font-bold">Private access verified</p>
-                      <p className="mt-1 text-cyan/80">The access code opens the campaign. Click Join campaign below to become an official tester.</p>
-                    </div>
-                  )}
                   <button type="submit" className="btn-primary w-full">
                     Join campaign
                   </button>

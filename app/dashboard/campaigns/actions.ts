@@ -158,14 +158,15 @@ export async function changeCampaignStatus(projectId: string, campaignId: string
 export async function joinCampaign(campaignId: string, formData: FormData) {
   const campaignPath = `/campaigns/${campaignId}`;
   const accessCode = String(formData.get("accessCode") ?? "").trim().toUpperCase();
-  const codeQuery = accessCode ? `code=${encodeURIComponent(accessCode)}` : "";
+  const pageAccessCode = String(formData.get("pageAccessCode") ?? "").trim().toUpperCase();
+  const pageCodeQuery = pageAccessCode ? `code=${encodeURIComponent(pageAccessCode)}` : "";
   const withCampaignQuery = (name: "error" | "success", message: string) =>
-    `${campaignPath}?${codeQuery ? `${codeQuery}&` : ""}${name}=${encodeURIComponent(message)}`;
+    `${campaignPath}?${pageCodeQuery ? `${pageCodeQuery}&` : ""}${name}=${encodeURIComponent(message)}`;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    const returnPath = `${campaignPath}${codeQuery ? `?${codeQuery}` : ""}`;
+    const returnPath = `${campaignPath}${pageCodeQuery ? `?${pageCodeQuery}` : ""}`;
     redirect(`/login?error=${encodeURIComponent("Please log in to join a campaign.")}&next=${encodeURIComponent(returnPath)}`);
   }
 
@@ -184,6 +185,6 @@ export async function joinCampaign(campaignId: string, formData: FormData) {
   revalidatePath("/dashboard/testing");
   redirect(withCampaignQuery(
     "success",
-    data === "already_joined" ? "You already joined this campaign." : "You joined the campaign successfully."
+    data === "already_joined" ? "You already joined this campaign." : "Access code accepted. You joined the campaign successfully."
   ));
 }

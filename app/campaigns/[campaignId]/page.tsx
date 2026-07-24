@@ -11,6 +11,7 @@ import {
   FileText,
   Gauge,
   PauseCircle,
+  Rocket,
   Settings2,
   ShieldCheck,
   Users
@@ -66,7 +67,7 @@ export default async function CampaignPage({
 
   const owner = user?.id === project.owner_id;
 
-  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }] =
+  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }, { data: activeBoost }] =
     await Promise.all([
       supabase.rpc("get_campaign_member_count", {
         p_campaign_id: campaign.id
@@ -84,7 +85,18 @@ export default async function CampaignPage({
             .from("campaign_members")
             .select("id,status,joined_at,submitted_at,approved_at")
             .eq("campaign_id", campaign.id)
-        : Promise.resolve({ data: [] })
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("content_boosts")
+        .select("id,boost_code,starts_at,ends_at,status")
+        .eq("target_type", "campaign")
+        .eq("target_id", campaign.id)
+        .eq("status", "active")
+        .lte("starts_at", new Date().toISOString())
+        .gt("ends_at", new Date().toISOString())
+        .order("ends_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
     ]);
 
   const joined = Number(joinedCount ?? 0);
@@ -167,6 +179,11 @@ export default async function CampaignPage({
                   <span className="badge">{project.platform}</span>
                   <span className="badge">{project.stage}</span>
                   <span className="badge">{campaign.status}</span>
+                  {activeBoost && (
+                    <span className="badge border-lime/40 bg-lime/10 text-lime">
+                      <Rocket size={13} /> Urgent boost active
+                    </span>
+                  )}
                   {owner && (
                     <span className="badge border-lime/30 bg-lime/10 text-lime">
                       My campaign
@@ -305,6 +322,13 @@ export default async function CampaignPage({
                 Campaign details
               </p>
 
+              {activeBoost && (
+                <div className="mt-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">
+                  <p className="flex items-center gap-2 font-bold"><Rocket size={17} /> Urgent campaign boost active</p>
+                  <p className="mt-2 text-lime/80">Ends {new Date(activeBoost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</p>
+                </div>
+              )}
+
               <div className="mt-5 space-y-4 text-sm">
                 <div className="flex items-center justify-between gap-4">
                   <span className="flex items-center gap-2 text-soft">
@@ -431,6 +455,16 @@ export default async function CampaignPage({
                     <span className="text-soft">Already awarded</span>
                     <strong>{spentCredits}</strong>
                   </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-soft">Urgent boost</span>
+                    <strong className={activeBoost ? "text-lime" : ""}>{activeBoost ? "Active" : "Not active"}</strong>
+                  </div>
+                  {activeBoost && (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-soft">Boost ends</span>
+                      <strong>{new Date(activeBoost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</strong>
+                    </div>
+                  )}
                 </div>
 
                 <Link

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, RefreshCw, Search, Users } from "lucide-react";
+import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, RefreshCw, Rocket, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 
@@ -29,6 +29,9 @@ export type BrowseCampaign = {
   creator_display_name: string | null;
   creator_avatar_url: string | null;
   creator_role: string | null;
+  is_boosted: boolean;
+  boost_code: string | null;
+  boost_ends_at: string | null;
 };
 
 type Filters = { search: string; platform: string; stage: string; sort: string };
@@ -117,7 +120,11 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
     const refresh = () => void checkForUpdates();
     const visibility = () => { if (document.visibilityState === "visible") refresh(); };
     window.addEventListener("focus", refresh); window.addEventListener("online", refresh); document.addEventListener("visibilitychange", visibility);
-    const channel = supabase.channel("campaigns-live").on("postgres_changes", { event: "*", schema: "public", table: "testing_campaigns" }, refresh).subscribe();
+    const channel = supabase
+      .channel("campaigns-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "testing_campaigns" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "content_boosts" }, refresh)
+      .subscribe();
     return () => { window.clearInterval(interval); window.removeEventListener("focus", refresh); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", visibility); void supabase.removeChannel(channel); };
   }, [checkForUpdates, supabase]);
 
@@ -153,11 +160,18 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
             const percentage = Math.min(100, Math.round((joined / campaign.tester_goal) * 100));
             const daysLeft = campaign.ends_at ? Math.max(0, Math.ceil((new Date(campaign.ends_at).getTime() - Date.now()) / 86400000)) : campaign.duration_days;
             return (
-              <article key={campaign.id} className="card grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center">
+              <article key={campaign.id} className={`card grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center ${campaign.is_boosted ? "border-lime/40 bg-lime/[0.04]" : ""}`}>
                 <div className="flex gap-4">
                   {campaign.icon_url ? <img src={campaign.icon_url} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-lime text-2xl font-black text-ink">{campaign.project_name.charAt(0).toUpperCase()}</div>}
                   <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex flex-wrap gap-2"><span className="badge">{campaign.platform}</span><span className="badge">{campaign.stage}</span></div>
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {campaign.is_boosted && (
+                        <span className="badge border-lime/40 bg-lime/10 text-lime">
+                          <Rocket size={13} /> Boosted
+                        </span>
+                      )}
+                      <span className="badge">{campaign.platform}</span><span className="badge">{campaign.stage}</span>
+                    </div>
                     <h2 className="text-2xl font-black">{campaign.title}</h2>
                     <p className="mt-1 font-semibold text-white/80">{campaign.project_name}</p>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-soft">{campaign.short_description}</p>
@@ -176,6 +190,11 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                       <span className="flex items-center gap-2"><Coins size={16} /> {campaign.reward_credits} credits</span>
                     </div>
                     <div className="mt-4 h-2 max-w-xl overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan" style={{ width: `${percentage}%` }} /></div>
+                    {campaign.is_boosted && campaign.boost_ends_at && (
+                      <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-lime">
+                        <Rocket size={14} /> Urgent boost active until {new Date(campaign.boost_ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <Link href={`/campaigns/${campaign.id}`} className="btn-secondary">View campaign</Link>

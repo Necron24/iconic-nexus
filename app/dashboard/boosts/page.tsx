@@ -18,6 +18,11 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
     supabase.from("content_boosts").select("id,target_type,target_id,boost_code,starts_at,ends_at,status").eq("purchaser_id", user.id).order("created_at", { ascending: false }).limit(20)
   ]);
 
+  const activeBoosts = (active.data ?? []).filter((boost: any) =>
+    boost.status === "active" && new Date(boost.ends_at).getTime() > Date.now()
+  );
+  const activeByTarget = new Map(activeBoosts.map((boost: any) => [`${boost.target_type}:${boost.target_id}`, boost]));
+
   const targetMap: Record<string, { id: string; label: string }[]> = {
     project: (projects.data ?? []).map((x: any) => ({ id: x.id, label: x.name })),
     campaign: (campaigns.data ?? []).map((x: any) => ({ id: x.id, label: x.title })),
@@ -41,11 +46,29 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
         return <div className="card p-6" key={product.code}>
           <div className="flex items-start justify-between gap-4"><div><Rocket className="text-cyan"/><h3 className="mt-3 text-xl font-black">{product.name}</h3><p className="mt-2 text-sm text-soft">{product.description}</p></div><span className="rounded-full border border-lime/30 bg-lime/10 px-3 py-1 text-sm font-bold text-lime">{product.cost_credits} credits</span></div>
           <p className="mt-4 text-xs uppercase tracking-wider text-soft">Runs for {product.duration_hours} hours · labelled BOOSTED</p>
-          {targets.length ? <form action={buyBoost} className="mt-5 flex gap-3">
-            <input type="hidden" name="boostCode" value={product.code}/>
-            <select name="targetId" required className="min-w-0 flex-1"><option value="">Choose {product.target_type}</option>{targets.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</select>
-            <button className="btn-primary" type="submit">Activate</button>
-          </form> : <p className="mt-5 rounded-lg border border-dashed border-white/15 p-3 text-sm text-soft">No eligible {product.target_type}s yet.</p>}
+          {targets.length ? (
+            <div className="mt-5 space-y-3">
+              {targets.some((target) => activeByTarget.has(`${product.target_type}:${target.id}`)) && (
+                <div className="rounded-xl border border-lime/30 bg-lime/10 p-3 text-sm text-lime">
+                  {targets.filter((target) => activeByTarget.has(`${product.target_type}:${target.id}`)).map((target) => {
+                    const boost: any = activeByTarget.get(`${product.target_type}:${target.id}`);
+                    return <p key={target.id}><strong>{target.label}</strong> is boosted until {new Date(boost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</p>;
+                  })}
+                </div>
+              )}
+              <form action={buyBoost} className="flex gap-3">
+                <input type="hidden" name="boostCode" value={product.code}/>
+                <select name="targetId" required className="min-w-0 flex-1">
+                  <option value="">Choose {product.target_type}</option>
+                  {targets.map((target) => {
+                    const activeBoost: any = activeByTarget.get(`${product.target_type}:${target.id}`);
+                    return <option key={target.id} value={target.id} disabled={Boolean(activeBoost)}>{target.label}{activeBoost ? " — already boosted" : ""}</option>;
+                  })}
+                </select>
+                <button className="btn-primary" type="submit">Activate</button>
+              </form>
+            </div>
+          ) : <p className="mt-5 rounded-lg border border-dashed border-white/15 p-3 text-sm text-soft">No eligible {product.target_type}s yet.</p>}
         </div>;
       })}
     </div>

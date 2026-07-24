@@ -10,8 +10,8 @@ import {
   Eye,
   FileText,
   Gauge,
+  LockKeyhole,
   PauseCircle,
-  Rocket,
   Settings2,
   ShieldCheck,
   Users
@@ -34,10 +34,10 @@ export default async function CampaignPage({
   searchParams
 }: {
   params: Promise<{ campaignId: string }>;
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; code?: string }>;
 }) {
   const { campaignId } = await params;
-  const { error, success } = await searchParams;
+  const { error, success, code } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user }
@@ -46,7 +46,7 @@ export default async function CampaignPage({
   const { data: campaign } = await supabase
     .from("testing_campaigns")
     .select(
-      "id, project_id, title, instructions, minimum_minutes, tester_goal, reward_credits, duration_days, starts_at, ends_at, status, reserved_credits, spent_credits, projects!inner(id, owner_id, name, slug, platform, stage, short_description, icon_url, cover_url, testing_url, is_published, moderation_status, profiles!projects_owner_id_fkey(username, display_name, avatar_url, role))"
+      "id, project_id, title, instructions, minimum_minutes, tester_goal, reward_credits, duration_days, starts_at, ends_at, status, reserved_credits, spent_credits, is_private, access_code, projects!inner(id, owner_id, name, slug, platform, stage, short_description, icon_url, cover_url, testing_url, is_published, moderation_status, profiles!projects_owner_id_fkey(username, display_name, avatar_url, role))"
     )
     .eq("id", campaignId)
     .maybeSingle();
@@ -66,8 +66,10 @@ export default async function CampaignPage({
     : project.profiles;
 
   const owner = user?.id === project.owner_id;
+  const suppliedCode = String(code ?? "").trim().toUpperCase();
+  const validPrivateCode = !campaign.is_private || suppliedCode === String(campaign.access_code ?? "").toUpperCase();
 
-  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }, { data: activeBoost }] =
+  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }] =
     await Promise.all([
       supabase.rpc("get_campaign_member_count", {
         p_campaign_id: campaign.id
@@ -85,19 +87,25 @@ export default async function CampaignPage({
             .from("campaign_members")
             .select("id,status,joined_at,submitted_at,approved_at")
             .eq("campaign_id", campaign.id)
-        : Promise.resolve({ data: [] }),
-      supabase
-        .from("content_boosts")
-        .select("id,boost_code,starts_at,ends_at,status")
-        .eq("target_type", "campaign")
-        .eq("target_id", campaign.id)
-        .eq("status", "active")
-        .lte("starts_at", new Date().toISOString())
-        .gt("ends_at", new Date().toISOString())
-        .order("ends_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+        : Promise.resolve({ data: [] })
     ]);
+
+  if (campaign.is_private && !owner && !membership && !validPrivateCode) {
+    return (
+      <section className="container-page py-14">
+        <div className="mx-auto max-w-xl card p-7 text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan/10 text-cyan"><LockKeyhole size={26}/></div>
+          <h1 className="mt-5 text-3xl font-black">Private campaign</h1>
+          <p className="mt-3 text-soft">Enter the access code supplied by the campaign owner.</p>
+          {code && <p className="mt-3 text-sm text-red-200">That access code is invalid.</p>}
+          <form method="get" className="mt-6 space-y-3">
+            <input name="code" className="field text-center font-mono uppercase tracking-[.2em]" maxLength={16} placeholder="ACCESS CODE" required />
+            <button className="btn-primary w-full" type="submit">Open private campaign</button>
+          </form>
+        </div>
+      </section>
+    );
+  }
 
   const joined = Number(joinedCount ?? 0);
   const members = ownerMembers ?? [];
@@ -114,7 +122,7 @@ export default async function CampaignPage({
         )
       )
     : campaign.duration_days;
-  const joinAction = joinCampaign.bind(null, campaign.id);
+  const joinAction = joinCampaign.bind(null, campaign.id, campaign.is_private ? suppliedCode : null);
 
   const counts = {
     joined: members.filter((member) => member.status === "joined").length,
@@ -179,11 +187,7 @@ export default async function CampaignPage({
                   <span className="badge">{project.platform}</span>
                   <span className="badge">{project.stage}</span>
                   <span className="badge">{campaign.status}</span>
-                  {activeBoost && (
-                    <span className="badge border-lime/40 bg-lime/10 text-lime">
-                      <Rocket size={13} /> Urgent boost active
-                    </span>
-                  )}
+                  {campaign.is_private && <span className="badge border-cyan/30 bg-cyan/10 text-cyan"><LockKeyhole size={13} className="mr-1"/> Private</span>}
                   {owner && (
                     <span className="badge border-lime/30 bg-lime/10 text-lime">
                       My campaign
@@ -322,13 +326,6 @@ export default async function CampaignPage({
                 Campaign details
               </p>
 
-              {activeBoost && (
-                <div className="mt-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">
-                  <p className="flex items-center gap-2 font-bold"><Rocket size={17} /> Urgent campaign boost active</p>
-                  <p className="mt-2 text-lime/80">Ends {new Date(activeBoost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</p>
-                </div>
-              )}
-
               <div className="mt-5 space-y-4 text-sm">
                 <div className="flex items-center justify-between gap-4">
                   <span className="flex items-center gap-2 text-soft">
@@ -429,10 +426,7 @@ export default async function CampaignPage({
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-soft">Visibility</span>
                     <strong>
-                      {project.is_published &&
-                      project.moderation_status !== "hidden"
-                        ? "Public"
-                        : "Private"}
+                      {campaign.is_private ? "Private campaign" : project.is_published && project.moderation_status !== "hidden" ? "Public" : "Unpublished project"}
                     </strong>
                   </div>
                   <div className="flex items-center justify-between gap-4">
@@ -455,16 +449,6 @@ export default async function CampaignPage({
                     <span className="text-soft">Already awarded</span>
                     <strong>{spentCredits}</strong>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-soft">Urgent boost</span>
-                    <strong className={activeBoost ? "text-lime" : ""}>{activeBoost ? "Active" : "Not active"}</strong>
-                  </div>
-                  {activeBoost && (
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-soft">Boost ends</span>
-                      <strong>{new Date(activeBoost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</strong>
-                    </div>
-                  )}
                 </div>
 
                 <Link

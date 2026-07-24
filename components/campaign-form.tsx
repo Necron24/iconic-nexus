@@ -13,6 +13,7 @@ type Defaults = {
   rewardCredits?: number;
   instructions?: string;
   status?: string;
+  isPrivate?: boolean;
 };
 
 type Props = {
@@ -25,6 +26,8 @@ type Props = {
   availableCredits: number;
   currentReserved?: number;
   spentCredits?: number;
+  allowPrivateCampaigns?: boolean;
+  planName?: string;
 };
 
 function minimumReward(_minutes?: number, _duration?: number) {
@@ -40,7 +43,9 @@ export function CampaignForm({
   submitLabel = "Create campaign",
   availableCredits,
   currentReserved = 0,
-  spentCredits = 0
+  spentCredits = 0,
+  allowPrivateCampaigns = false,
+  planName = "Free"
 }: Props) {
   const originalTesterGoal = defaults?.testerGoal ?? 12;
   const originalDurationDays = defaults?.durationDays ?? 14;
@@ -52,6 +57,7 @@ export function CampaignForm({
   const [durationDays, setDurationDays] = useState(originalDurationDays);
   const [minimumMinutes, setMinimumMinutes] = useState(originalMinimumMinutes);
   const [rewardCredits, setRewardCredits] = useState(originalRewardCredits);
+  const [isPrivate, setIsPrivate] = useState(Boolean(defaults?.isPrivate));
 
   const requiredReward = minimumReward(minimumMinutes, durationDays);
   const isLegacyCampaign = Boolean(defaults && originalRewardCredits < originalRequiredReward);
@@ -232,6 +238,26 @@ export function CampaignForm({
             placeholder="Explain what testers must install, which features they should try, how often they should test, and what feedback you need."
           />
         </label>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+        <p className="font-black">Campaign visibility</p>
+        <p className="mt-1 text-sm text-soft">Choose whether this campaign appears in the public Campaigns feed.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className={`cursor-pointer rounded-xl border p-4 transition ${!isPrivate ? "border-lime/40 bg-lime/10" : "border-white/10 bg-white/5"}`}>
+            <span className="flex items-start gap-3">
+              <input name="isPrivate" type="radio" value="false" checked={!isPrivate} onChange={() => setIsPrivate(false)} className="mt-1 accent-lime" />
+              <span><strong className="block">Public campaign</strong><span className="mt-1 block text-sm text-soft">Visible in the public Campaigns feed. Any eligible tester can join.</span></span>
+            </span>
+          </label>
+          <label className={`rounded-xl border p-4 transition ${isPrivate ? "border-cyan/40 bg-cyan/10" : "border-white/10 bg-white/5"} ${allowPrivateCampaigns ? "cursor-pointer" : "cursor-not-allowed opacity-70"}`}>
+            <span className="flex items-start gap-3">
+              <input name="isPrivate" type="radio" value="true" checked={isPrivate} disabled={!allowPrivateCampaigns} onChange={() => setIsPrivate(true)} className="mt-1 accent-cyan" />
+              <span><strong className="block">Private campaign</strong><span className="mt-1 block text-sm text-soft">Hidden from public feeds. Testers join with the private invite link and access code.</span></span>
+            </span>
+          </label>
+        </div>
+        {!allowPrivateCampaigns && <p className="mt-3 text-sm text-amber-200">Private campaigns require Iconic Nexus Pro or Studio. Current plan: {planName}.</p>}
       </div>
 
       {!defaults && (

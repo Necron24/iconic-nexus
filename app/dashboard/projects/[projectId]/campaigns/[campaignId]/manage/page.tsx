@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
-import { Coins, PiggyBank, Rocket, WalletCards } from "lucide-react";
+import { Coins, PiggyBank, WalletCards } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CampaignForm } from "@/components/campaign-form";
+import { CampaignPrivacyPanel } from "@/components/campaign-privacy-panel";
 import { changeCampaignStatus, updateCampaign } from "@/app/dashboard/campaigns/actions";
 
 export default async function ManageCampaignPage({
@@ -17,24 +18,17 @@ export default async function ManageCampaignPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: project }, { data: profile }, { data: activeBoost }] = await Promise.all([
+  const [{ data: project }, { data: profile }, { data: planRows }] = await Promise.all([
     supabase.from("projects").select("id,name,owner_id").eq("id", projectId).maybeSingle(),
     supabase.from("profiles").select("credits").eq("id", user.id).single(),
-    supabase.from("content_boosts")
-      .select("id,boost_code,ends_at")
-      .eq("target_type", "campaign")
-      .eq("target_id", campaignId)
-      .eq("status", "active")
-      .gt("ends_at", new Date().toISOString())
-      .order("ends_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    supabase.rpc("current_plan", { p_profile_id: user.id })
   ]);
+  const plan = Array.isArray(planRows) ? planRows[0] : planRows;
   if (!project || project.owner_id !== user.id) notFound();
 
   const { data: campaign } = await supabase
     .from("testing_campaigns")
-    .select("id,title,instructions,tester_goal,duration_days,minimum_minutes,reward_credits,status,starts_at,ends_at,reserved_credits,spent_credits,campaign_members(id,status,profiles!campaign_members_tester_id_fkey(username,display_name))")
+    .select("id,title,instructions,tester_goal,duration_days,minimum_minutes,reward_credits,status,starts_at,ends_at,reserved_credits,spent_credits,is_private,access_code,campaign_members(id,status,profiles!campaign_members_tester_id_fkey(username,display_name))")
     .eq("id", campaignId)
     .eq("project_id", projectId)
     .maybeSingle();
@@ -55,12 +49,7 @@ export default async function ManageCampaignPage({
       {messages.success && <div className="mb-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">{messages.success}</div>}
       {messages.error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{messages.error}</div>}
 
-      {activeBoost && (
-        <div className="mb-6 rounded-xl border border-lime/30 bg-lime/10 p-5 text-lime">
-          <p className="flex items-center gap-2 font-black"><Rocket size={18} /> Urgent campaign boost active</p>
-          <p className="mt-2 text-sm text-lime/80">Your campaign is prioritised in campaign feeds until {new Date(activeBoost.ends_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}.</p>
-        </div>
-      )}
+      {campaign.is_private && campaign.access_code && <CampaignPrivacyPanel campaignId={campaign.id} accessCode={campaign.access_code} />}
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <div className="card p-5">
@@ -115,7 +104,8 @@ export default async function ManageCampaignPage({
             minimumMinutes: campaign.minimum_minutes,
             rewardCredits: campaign.reward_credits,
             instructions: campaign.instructions,
-            status: campaign.status
+            status: campaign.status,
+            isPrivate: Boolean(campaign.is_private)
           }}
         />
       ) : (

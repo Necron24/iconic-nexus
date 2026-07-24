@@ -16,10 +16,12 @@ export default async function NewCampaignPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: project }, { data: profile }] = await Promise.all([
+  const [{ data: project }, { data: profile }, { data: planRows }] = await Promise.all([
     supabase.from("projects").select("id, owner_id, name").eq("id", projectId).maybeSingle(),
-    supabase.from("profiles").select("credits").eq("id", user.id).single()
+    supabase.from("profiles").select("credits").eq("id", user.id).single(),
+    supabase.rpc("current_plan", { p_profile_id: user.id })
   ]);
+  const plan = Array.isArray(planRows) ? planRows[0] : planRows;
 
   if (!project || project.owner_id !== user.id) notFound();
 
@@ -39,6 +41,8 @@ export default async function NewCampaignPage({
         cancelHref="/dashboard/projects"
         error={error}
         availableCredits={Number(profile?.credits ?? 0)}
+        allowPrivateCampaigns={Boolean(plan?.private_campaigns)}
+        planName={plan?.plan_name ?? "Free"}
       />
     </div>
   );

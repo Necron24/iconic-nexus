@@ -61,6 +61,18 @@ export async function createCampaign(projectId: string, formData: FormData) {
 
   if (error || !campaignId) fail(path, error?.message || "Campaign could not be created.");
 
+  const wantsPrivate = formData.get("isPrivate") === "true";
+  if (wantsPrivate) {
+    const { error: privacyError } = await supabase.rpc("set_campaign_privacy", {
+      p_campaign_id: campaignId,
+      p_is_private: true
+    });
+    if (privacyError) {
+      await supabase.rpc("change_funded_campaign_status", { p_campaign_id: campaignId, p_next_status: "cancelled" });
+      fail(path, privacyError.message);
+    }
+  }
+
   revalidatePath("/campaigns");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/projects");
@@ -106,6 +118,12 @@ export async function updateCampaign(projectId: string, campaignId: string, form
 
   if (error) fail(path, error.message);
 
+  const { error: privacyError } = await supabase.rpc("set_campaign_privacy", {
+    p_campaign_id: campaignId,
+    p_is_private: formData.get("isPrivate") === "true"
+  });
+  if (privacyError) fail(path, privacyError.message);
+
   revalidatePath(`/campaigns/${campaignId}`);
   revalidatePath("/campaigns");
   revalidatePath("/dashboard/projects");
@@ -137,12 +155,12 @@ export async function changeCampaignStatus(projectId: string, campaignId: string
   redirect(`${path}?success=${encodeURIComponent(`Campaign is now ${nextStatus}.`)}`);
 }
 
-export async function joinCampaign(campaignId: string) {
+export async function joinCampaign(campaignId: string, accessCode: string | null = null) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?error=${encodeURIComponent("Please log in to join a campaign.")}`);
 
-  const { data, error } = await supabase.rpc("join_testing_campaign", { p_campaign_id: campaignId });
+  const { data, error } = await supabase.rpc("join_testing_campaign", { p_campaign_id: campaignId, p_access_code: accessCode });
   if (error) redirect(`/campaigns/${campaignId}?error=${encodeURIComponent(error.message)}`);
   if (data !== "joined" && data !== "already_joined") {
     redirect(`/campaigns/${campaignId}?error=${encodeURIComponent("The campaign could not be joined.")}`);

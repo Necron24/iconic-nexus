@@ -156,18 +156,32 @@ export async function changeCampaignStatus(projectId: string, campaignId: string
 }
 
 export async function joinCampaign(campaignId: string, accessCode: string | null = null) {
+  const campaignPath = `/campaigns/${campaignId}`;
+  const codeQuery = accessCode ? `code=${encodeURIComponent(accessCode)}` : "";
+  const withCampaignQuery = (name: "error" | "success", message: string) =>
+    `${campaignPath}?${codeQuery ? `${codeQuery}&` : ""}${name}=${encodeURIComponent(message)}`;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?error=${encodeURIComponent("Please log in to join a campaign.")}`);
-
-  const { data, error } = await supabase.rpc("join_testing_campaign", { p_campaign_id: campaignId, p_access_code: accessCode });
-  if (error) redirect(`/campaigns/${campaignId}?error=${encodeURIComponent(error.message)}`);
-  if (data !== "joined" && data !== "already_joined") {
-    redirect(`/campaigns/${campaignId}?error=${encodeURIComponent("The campaign could not be joined.")}`);
+  if (!user) {
+    const returnPath = `${campaignPath}${codeQuery ? `?${codeQuery}` : ""}`;
+    redirect(`/login?error=${encodeURIComponent("Please log in to join a campaign.")}&next=${encodeURIComponent(returnPath)}`);
   }
 
-  revalidatePath(`/campaigns/${campaignId}`);
+  const { data, error } = await supabase.rpc("join_testing_campaign", {
+    p_campaign_id: campaignId,
+    p_access_code: accessCode
+  });
+  if (error) redirect(withCampaignQuery("error", error.message));
+  if (data !== "joined" && data !== "already_joined") {
+    redirect(withCampaignQuery("error", "The campaign could not be joined."));
+  }
+
+  revalidatePath(campaignPath);
   revalidatePath("/campaigns");
   revalidatePath("/dashboard/testing");
-  redirect(`/campaigns/${campaignId}?success=${encodeURIComponent(data === "already_joined" ? "You already joined this campaign." : "You joined the campaign successfully.")}`);
+  redirect(withCampaignQuery(
+    "success",
+    data === "already_joined" ? "You already joined this campaign." : "You joined the campaign successfully."
+  ));
 }

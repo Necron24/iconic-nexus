@@ -207,13 +207,15 @@ export default async function CampaignPage({
                   {project.name}
                 </Link>
 
-                <CreatorTag
-                  username={creator?.username ?? null}
-                  displayName={creator?.display_name ?? null}
-                  avatarUrl={creator?.avatar_url ?? null}
-                  role={creator?.role ?? null}
-                  className="mt-4 w-full max-w-md"
-                />
+                <div className="mt-4">
+                  <CreatorTag
+                    username={creator?.username ?? null}
+                    displayName={creator?.display_name ?? null}
+                    avatarUrl={creator?.avatar_url ?? null}
+                    role={creator?.role ?? null}
+                    className="w-full max-w-md"
+                  />
+                </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <ShareButton title={campaign.title} text={`Testing campaign for ${project.name}`} path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`} />
                 </div>
@@ -404,6 +406,12 @@ export default async function CampaignPage({
                 </div>
               ) : (
                 <form action={joinAction} className="mt-6">
+                  {campaign.is_private && suppliedCode && (
+                    <div className="mb-4 rounded-xl border border-cyan/25 bg-cyan/10 p-4 text-sm text-cyan">
+                      <p className="font-bold">Private access verified</p>
+                      <p className="mt-1 text-cyan/80">The access code opens the campaign. Click Join campaign below to become an official tester.</p>
+                    </div>
+                  )}
                   <button type="submit" className="btn-primary w-full">
                     Join campaign
                   </button>

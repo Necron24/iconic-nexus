@@ -155,8 +155,9 @@ export async function changeCampaignStatus(projectId: string, campaignId: string
   redirect(`${path}?success=${encodeURIComponent(`Campaign is now ${nextStatus}.`)}`);
 }
 
-export async function joinCampaign(campaignId: string, accessCode: string | null = null) {
+export async function joinCampaign(campaignId: string, formData: FormData) {
   const campaignPath = `/campaigns/${campaignId}`;
+  const accessCode = String(formData.get("accessCode") ?? "").trim().toUpperCase();
   const codeQuery = accessCode ? `code=${encodeURIComponent(accessCode)}` : "";
   const withCampaignQuery = (name: "error" | "success", message: string) =>
     `${campaignPath}?${codeQuery ? `${codeQuery}&` : ""}${name}=${encodeURIComponent(message)}`;
@@ -170,8 +171,9 @@ export async function joinCampaign(campaignId: string, accessCode: string | null
 
   const { data, error } = await supabase.rpc("join_testing_campaign", {
     p_campaign_id: campaignId,
-    p_access_code: accessCode
+    p_access_code: accessCode || null
   });
+
   if (error) redirect(withCampaignQuery("error", error.message));
   if (data !== "joined" && data !== "already_joined") {
     redirect(withCampaignQuery("error", "The campaign could not be joined."));

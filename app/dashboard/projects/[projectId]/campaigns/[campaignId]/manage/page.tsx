@@ -117,6 +117,8 @@ export default async function ManageCampaignPage({
           availableCredits={Number(profile?.credits ?? 0)}
           currentReserved={Number(campaign.reserved_credits ?? 0)}
           spentCredits={Number(campaign.spent_credits ?? 0)}
+          allowPrivateCampaigns={Boolean(plan?.private_campaigns) || Boolean(campaign.is_private)}
+          planName={plan?.plan_name ?? "Free"}
           defaults={{
             title: campaign.title,
             testerGoal: campaign.tester_goal,

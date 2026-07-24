@@ -58,6 +58,7 @@ export function CampaignForm({
   const [minimumMinutes, setMinimumMinutes] = useState(originalMinimumMinutes);
   const [rewardCredits, setRewardCredits] = useState(originalRewardCredits);
   const [isPrivate, setIsPrivate] = useState(Boolean(defaults?.isPrivate));
+  const canUsePrivateCampaigns = allowPrivateCampaigns || Boolean(defaults?.isPrivate);
 
   const requiredReward = minimumReward(minimumMinutes, durationDays);
   const isLegacyCampaign = Boolean(defaults && originalRewardCredits < originalRequiredReward);
@@ -250,14 +251,14 @@ export function CampaignForm({
               <span><strong className="block">Public campaign</strong><span className="mt-1 block text-sm text-soft">Visible in the public Campaigns feed. Any eligible tester can join.</span></span>
             </span>
           </label>
-          <label className={`rounded-xl border p-4 transition ${isPrivate ? "border-cyan/40 bg-cyan/10" : "border-white/10 bg-white/5"} ${allowPrivateCampaigns ? "cursor-pointer" : "cursor-not-allowed opacity-70"}`}>
+          <label className={`rounded-xl border p-4 transition ${isPrivate ? "border-cyan/40 bg-cyan/10" : "border-white/10 bg-white/5"} ${canUsePrivateCampaigns ? "cursor-pointer" : "cursor-not-allowed opacity-70"}`}>
             <span className="flex items-start gap-3">
-              <input name="isPrivate" type="radio" value="true" checked={isPrivate} disabled={!allowPrivateCampaigns} onChange={() => setIsPrivate(true)} className="mt-1 accent-cyan" />
+              <input name="isPrivate" type="radio" value="true" checked={isPrivate} disabled={!canUsePrivateCampaigns} onChange={() => setIsPrivate(true)} className="mt-1 accent-cyan" />
               <span><strong className="block">Private campaign</strong><span className="mt-1 block text-sm text-soft">Hidden from public feeds. Testers join with the private invite link and access code.</span></span>
             </span>
           </label>
         </div>
-        {!allowPrivateCampaigns && <p className="mt-3 text-sm text-amber-200">Private campaigns require Iconic Nexus Pro or Studio. Current plan: {planName}.</p>}
+        {!canUsePrivateCampaigns && <p className="mt-3 text-sm text-amber-200">Private campaigns require Iconic Nexus Pro or Studio. Current plan: {planName}.</p>}
       </div>
 
       {!defaults && (

@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { Coins, PiggyBank, WalletCards } from "lucide-react";
+import { Coins, Globe2, LockKeyhole, PiggyBank, WalletCards } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CampaignForm } from "@/components/campaign-form";
 import { CampaignPrivacyPanel } from "@/components/campaign-privacy-panel";
@@ -42,8 +42,22 @@ export default async function ManageCampaignPage({
     <div>
       <div className="mb-6">
         <p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Campaign management</p>
-        <h2 className="mt-2 text-3xl font-black">{campaign.title}</h2>
-        <p className="mt-2 text-soft">Current status: {campaign.status}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <h2 className="text-3xl font-black">{campaign.title}</h2>
+          <span
+            className={
+              campaign.is_private
+                ? "inline-flex items-center gap-1.5 rounded-full border border-cyan/30 bg-cyan/10 px-3 py-1.5 text-xs font-black text-cyan"
+                : "inline-flex items-center gap-1.5 rounded-full border border-lime/30 bg-lime/10 px-3 py-1.5 text-xs font-black text-lime"
+            }
+          >
+            {campaign.is_private ? <LockKeyhole size={14} /> : <Globe2 size={14} />}
+            {campaign.is_private ? "Private campaign" : "Public campaign"}
+          </span>
+        </div>
+        <p className="mt-2 text-soft">
+          Current status: {campaign.status} · {campaign.is_private ? "Hidden from public discovery and available by invite only." : "Visible in public campaign discovery while active."}
+        </p>
       </div>
 
       {messages.success && <div className="mb-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">{messages.success}</div>}

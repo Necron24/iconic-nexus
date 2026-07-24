@@ -6,6 +6,8 @@ import {
   Pencil,
   Plus,
   Settings2,
+  LockKeyhole,
+  Globe2,
   Users
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +28,7 @@ export default async function DashboardProjectsPage({
   const { data: projects } = await supabase
     .from("projects")
     .select(
-      "id,name,slug,type,stage,platform,is_published,icon_url,testing_campaigns(id,title,status,campaign_members(id,status))"
+      "id,name,slug,type,stage,platform,is_published,icon_url,testing_campaigns(id,title,status,is_private,access_code,campaign_members(id,status))"
     )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
@@ -162,14 +164,31 @@ export default async function DashboardProjectsPage({
                             key={campaign.id}
                             className="flex flex-col gap-2 rounded-xl bg-white/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
-                            <div>
-                              <p className="font-semibold">{campaign.title}</p>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="truncate font-semibold">{campaign.title}</p>
+                                <span
+                                  className={
+                                    campaign.is_private
+                                      ? "inline-flex items-center gap-1 rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-1 text-[11px] font-black text-cyan"
+                                      : "inline-flex items-center gap-1 rounded-full border border-lime/30 bg-lime/10 px-2.5 py-1 text-[11px] font-black text-lime"
+                                  }
+                                >
+                                  {campaign.is_private ? <LockKeyhole size={12} /> : <Globe2 size={12} />}
+                                  {campaign.is_private ? "Private" : "Public"}
+                                </span>
+                              </div>
                               <p className="mt-1 text-xs text-soft">
                                 Status: {campaign.status}
                                 {submitted > 0
                                   ? ` · ${submitted} awaiting review`
                                   : ""}
                               </p>
+                              {campaign.is_private && (
+                                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-cyan/90">
+                                  <LockKeyhole size={12} /> Invite only · Access code available in Manage
+                                </p>
+                              )}
                             </div>
 
                             <div className="flex flex-wrap gap-2">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Bell, Coins, FolderKanban, MessageSquareText, Plus, Star } from "lucide-react";
+import { Activity, Bell, Coins, FolderKanban, LockKeyhole, MessageSquareText, Plus, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     supabase.from("profiles").select("credits, tester_reputation, display_name, username, country, bio, role").eq("id", user.id).single(),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).eq("status", "approved"),
-    supabase.from("testing_campaigns").select("id, title, tester_goal, projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
+    supabase.from("testing_campaigns").select("id, title, tester_goal, is_private, projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
     supabase.from("campaign_members").select("id, testing_campaigns!inner(projects!inner(owner_id))", { count: "exact", head: true }).eq("testing_campaigns.projects.owner_id", user.id).eq("status", "submitted"),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).in("status", ["joined", "in_progress"]),
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("profile_id", user.id).eq("is_read", false)
@@ -85,7 +85,27 @@ export default async function DashboardPage() {
       ))}
     </div>
     <div className="mt-6 grid gap-5 lg:grid-cols-2">
-      <div className="card p-6"><h2 className="text-xl font-black">Campaign progress</h2>{activeCampaign?<><p className="mt-2 text-sm text-soft">{activeCampaign.title}</p><div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan" style={{width:`${progress}%`}}/></div><p className="mt-2 text-sm text-soft">{joinedCount} of {testerGoal} testers joined</p></>:<div className="mt-4 rounded-xl border border-dashed border-white/15 p-5 text-sm text-soft">You do not have an active testing campaign yet.</div>}</div>
+      <div className="card p-6">
+        <h2 className="text-xl font-black">Campaign progress</h2>
+        {activeCampaign ? (
+          <>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="text-sm text-soft">{activeCampaign.title}</p>
+              {activeCampaign.is_private && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-1 text-[11px] font-black text-cyan">
+                  <LockKeyhole size={12} /> Private
+                </span>
+              )}
+            </div>
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-cyan" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="mt-2 text-sm text-soft">{joinedCount} of {testerGoal} testers joined</p>
+          </>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed border-white/15 p-5 text-sm text-soft">You do not have an active testing campaign yet.</div>
+        )}
+      </div>
       <div className="card p-6"><h2 className="text-xl font-black">Next actions</h2><div className="mt-4 space-y-3 text-sm text-soft">
         {pendingReviews>0&&<Link href="/dashboard/projects" className="flex items-center justify-between rounded-xl bg-lime/10 p-4 text-lime hover:bg-lime/15"><span className="flex items-center gap-2"><MessageSquareText size={17}/> Review submitted feedback</span><strong>{pendingReviews}</strong></Link>}
         {activeTests>0&&<Link href="/dashboard/testing" className="flex items-center justify-between rounded-xl bg-white/5 p-4 hover:bg-white/10"><span>Continue your active tests</span><strong>{activeTests}</strong></Link>}

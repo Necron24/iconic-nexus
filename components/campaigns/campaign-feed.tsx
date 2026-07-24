@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, RefreshCw, Rocket, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
+import { ShareButton } from "@/components/share-button";
 
 const PAGE_SIZE = 10;
 const POLL_MS = 60000;
@@ -197,7 +198,15 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                     )}
                   </div>
                 </div>
-                <Link href={`/campaigns/${campaign.id}`} className="btn-secondary">View campaign</Link>
+                <div className="flex flex-wrap gap-2 md:flex-col">
+                  <Link href={`/campaigns/${campaign.id}`} className="btn-secondary">View campaign</Link>
+                  <ShareButton
+                    title={campaign.title}
+                    text={`Join the ${campaign.title} testing campaign for ${campaign.project_name} on Iconic Nexus.`}
+                    path={`/campaigns/${campaign.id}`}
+                    className="btn-secondary gap-2"
+                  />
+                </div>
               </article>
             );
           })}

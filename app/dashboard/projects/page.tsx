@@ -11,6 +11,7 @@ import {
   Users
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { ShareButton } from "@/components/share-button";
 
 export default async function DashboardProjectsPage({
   searchParams
@@ -192,6 +193,12 @@ export default async function DashboardProjectsPage({
                             </div>
 
                             <div className="flex flex-wrap gap-2">
+                              <ShareButton
+                                title={campaign.title}
+                                text={campaign.is_private ? "You have been invited to a private Iconic Nexus testing campaign." : `Join the ${campaign.title} testing campaign on Iconic Nexus.`}
+                                path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`}
+                                className={campaign.is_private ? "btn-primary !px-3 !py-2 gap-2" : "btn-secondary !px-3 !py-2 gap-2"}
+                              />
                               <Link
                                 href={`/dashboard/projects/${project.id}/campaigns/${campaign.id}/manage`}
                                 className="btn-secondary !px-3 !py-2 gap-2"

@@ -3,6 +3,7 @@ import { Coins, Globe2, LockKeyhole, PiggyBank, WalletCards } from "lucide-react
 import { createClient } from "@/lib/supabase/server";
 import { CampaignForm } from "@/components/campaign-form";
 import { CampaignPrivacyPanel } from "@/components/campaign-privacy-panel";
+import { ShareButton } from "@/components/share-button";
 import { changeCampaignStatus, updateCampaign } from "@/app/dashboard/campaigns/actions";
 
 export default async function ManageCampaignPage({
@@ -54,6 +55,11 @@ export default async function ManageCampaignPage({
             {campaign.is_private ? <LockKeyhole size={14} /> : <Globe2 size={14} />}
             {campaign.is_private ? "Private campaign" : "Public campaign"}
           </span>
+          <ShareButton
+            title={campaign.title}
+            text={campaign.is_private ? "You have been invited to a private Iconic Nexus testing campaign." : `Join the ${campaign.title} testing campaign on Iconic Nexus.`}
+            path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`}
+          />
         </div>
         <p className="mt-2 text-soft">
           Current status: {campaign.status} · {campaign.is_private ? "Hidden from public discovery and available by invite only." : "Visible in public campaign discovery while active."}
@@ -63,7 +69,7 @@ export default async function ManageCampaignPage({
       {messages.success && <div className="mb-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">{messages.success}</div>}
       {messages.error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{messages.error}</div>}
 
-      {campaign.is_private && campaign.access_code && <CampaignPrivacyPanel campaignId={campaign.id} accessCode={campaign.access_code} />}
+      {campaign.is_private && campaign.access_code && <CampaignPrivacyPanel campaignId={campaign.id} accessCode={campaign.access_code} campaignTitle={campaign.title} />}
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <div className="card p-5">

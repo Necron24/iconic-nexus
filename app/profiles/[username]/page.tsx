@@ -4,6 +4,7 @@ import { ExternalLink, Github, Globe2, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectCard } from "@/components/project-card";
+import { ShareButton } from "@/components/share-button";
 
 const accentMap: Record<string, string> = {
   lime: '#9EFF3A',
@@ -94,6 +95,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
 
             <div className="flex flex-wrap gap-2 pb-2">
+              <ShareButton title={`${p.display_name || p.username} on Iconic Nexus`} text={p.headline || p.bio || undefined} path={`/profiles/${p.username}`} />
               {p.show_website !== false && p.website_url && (
                 <a href={p.website_url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bold text-ink transition hover:scale-[1.02]" style={accentButton}>
                   <Globe2 size={16} /> Website

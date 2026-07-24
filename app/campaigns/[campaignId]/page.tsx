@@ -19,6 +19,7 @@ import {
 import { joinCampaign } from "@/app/dashboard/campaigns/actions";
 import { createClient } from "@/lib/supabase/server";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
+import { ShareButton } from "@/components/share-button";
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
@@ -43,13 +44,32 @@ export default async function CampaignPage({
     data: { user }
   } = await supabase.auth.getUser();
 
-  const { data: campaign } = await supabase
-    .from("testing_campaigns")
-    .select(
-      "id, project_id, title, instructions, minimum_minutes, tester_goal, reward_credits, duration_days, starts_at, ends_at, status, reserved_credits, spent_credits, is_private, access_code, projects!inner(id, owner_id, name, slug, platform, stage, short_description, icon_url, cover_url, testing_url, is_published, moderation_status, profiles!projects_owner_id_fkey(username, display_name, avatar_url, role))"
-    )
-    .eq("id", campaignId)
-    .maybeSingle();
+  const suppliedCode = String(code ?? "").trim().toUpperCase();
+  const { data: campaignPayload } = await supabase.rpc("get_campaign_page", {
+    p_campaign_id: campaignId,
+    p_access_code: suppliedCode || null
+  });
+  const payload = campaignPayload as null | { access_required?: boolean; campaign?: any };
+
+  if (payload?.access_required) {
+    return (
+      <section className="container-page py-14">
+        <div className="mx-auto max-w-xl card p-7 text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan/10 text-cyan"><LockKeyhole size={26}/></div>
+          <h1 className="mt-5 text-3xl font-black">Private campaign</h1>
+          <p className="mt-3 text-soft">Enter the access code supplied by the campaign owner.</p>
+          {code && <p className="mt-3 text-sm text-red-200">That access code is invalid.</p>}
+          <form method="get" className="mt-6 space-y-3">
+            <input name="code" className="field text-center font-mono uppercase tracking-[.2em]" maxLength={16} placeholder="ACCESS CODE" required />
+            <button className="btn-primary w-full" type="submit">Open private campaign</button>
+          </form>
+        </div>
+      </section>
+    );
+  }
+
+  const campaign = payload?.campaign;
+
 
   if (!campaign) notFound();
 
@@ -66,8 +86,6 @@ export default async function CampaignPage({
     : project.profiles;
 
   const owner = user?.id === project.owner_id;
-  const suppliedCode = String(code ?? "").trim().toUpperCase();
-  const validPrivateCode = !campaign.is_private || suppliedCode === String(campaign.access_code ?? "").toUpperCase();
 
   const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }] =
     await Promise.all([
@@ -89,23 +107,6 @@ export default async function CampaignPage({
             .eq("campaign_id", campaign.id)
         : Promise.resolve({ data: [] })
     ]);
-
-  if (campaign.is_private && !owner && !membership && !validPrivateCode) {
-    return (
-      <section className="container-page py-14">
-        <div className="mx-auto max-w-xl card p-7 text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan/10 text-cyan"><LockKeyhole size={26}/></div>
-          <h1 className="mt-5 text-3xl font-black">Private campaign</h1>
-          <p className="mt-3 text-soft">Enter the access code supplied by the campaign owner.</p>
-          {code && <p className="mt-3 text-sm text-red-200">That access code is invalid.</p>}
-          <form method="get" className="mt-6 space-y-3">
-            <input name="code" className="field text-center font-mono uppercase tracking-[.2em]" maxLength={16} placeholder="ACCESS CODE" required />
-            <button className="btn-primary w-full" type="submit">Open private campaign</button>
-          </form>
-        </div>
-      </section>
-    );
-  }
 
   const joined = Number(joinedCount ?? 0);
   const members = ownerMembers ?? [];
@@ -213,6 +214,9 @@ export default async function CampaignPage({
                   role={creator?.role ?? null}
                   className="mt-4 w-full max-w-md"
                 />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <ShareButton title={campaign.title} text={`Testing campaign for ${project.name}`} path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`} />
+                </div>
               </div>
             </div>
 

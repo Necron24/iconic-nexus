@@ -17,6 +17,7 @@ export default async function HomePage() {
       .from("testing_campaigns")
       .select("id, title, tester_goal, reward_credits, duration_days, projects!inner(platform, is_published)")
       .eq("status", "active")
+      .eq("is_private", false)
       .eq("projects.is_published", true)
       .limit(1)
   ]);

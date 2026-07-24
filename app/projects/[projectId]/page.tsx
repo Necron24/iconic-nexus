@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ExternalLink, FileText, ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ScreenshotGallery } from "@/components/screenshot-gallery";
+import { ShareButton } from "@/components/share-button";
 
 const updateLabels: Record<string, string> = {
   development: "Development update",
@@ -53,7 +54,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
               </div>
             </div>
 
-            {project.testing_url && <a href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary shrink-0 gap-2">Open test link <ExternalLink size={17} /></a>}
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <ShareButton title={project.name} text={project.short_description} path={`/projects/${project.slug}`} />
+              {project.testing_url && <a href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary gap-2">Open test link <ExternalLink size={17} /></a>}
+            </div>
           </div>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_340px]">

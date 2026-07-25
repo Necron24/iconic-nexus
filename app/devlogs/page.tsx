@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Newspaper, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { DevlogCard } from "@/components/updates/devlog-card";
+import { DevlogPreviewCard, type DevlogPreview } from "@/components/updates/devlog-preview-card";
 
 export const metadata: Metadata = {
   title: "Devlogs | Iconic Nexus",
@@ -92,6 +92,18 @@ export default async function DevlogsPage({
   const updates = (data ?? []) as DevlogRow[];
   const total = count ?? 0;
   const hasNext = offset + updates.length < total;
+  const reactionCounts = new Map<string, number>();
+  const commentCounts = new Map<string, number>();
+
+  if (updates.length > 0) {
+    const updateIds = updates.map((update) => update.id);
+    const [{ data: reactions }, { data: comments }] = await Promise.all([
+      supabase.from("devlog_reactions").select("update_id").in("update_id", updateIds),
+      supabase.from("devlog_comments").select("update_id").in("update_id", updateIds).eq("is_deleted", false)
+    ]);
+    for (const row of reactions ?? []) reactionCounts.set(row.update_id, (reactionCounts.get(row.update_id) ?? 0) + 1);
+    for (const row of comments ?? []) commentCounts.set(row.update_id, (commentCounts.get(row.update_id) ?? 0) + 1);
+  }
 
   return (
     <section className="container-page py-14">
@@ -139,26 +151,13 @@ export default async function DevlogsPage({
         <div className="space-y-8">
           {updates.map((update) => {
             const project = Array.isArray(update.projects) ? update.projects[0] : update.projects;
-            return (
-              <section key={update.id}>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
-                  <Link href={`/projects/${project.slug}`} className="group flex min-w-0 items-center gap-3">
-                    {project.icon_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={project.icon_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
-                    ) : (
-                      <span className="grid h-11 w-11 place-items-center rounded-xl bg-lime font-black text-ink">{project.name.charAt(0)}</span>
-                    )}
-                    <span className="min-w-0">
-                      <strong className="block truncate transition group-hover:text-cyan">{project.name}</strong>
-                      <span className="text-xs text-soft">{project.platform} · {project.stage}</span>
-                    </span>
-                  </Link>
-                  <Link href={`/projects/${project.slug}#devlogs`} className="text-sm font-bold text-cyan hover:text-white">View project devlogs →</Link>
-                </div>
-                <DevlogCard update={update} />
-              </section>
-            );
+            const preview: DevlogPreview = {
+              ...update,
+              project,
+              reaction_count: reactionCounts.get(update.id) ?? 0,
+              comment_count: commentCounts.get(update.id) ?? 0
+            };
+            return <DevlogPreviewCard key={update.id} update={preview} />;
           })}
         </div>
       )}

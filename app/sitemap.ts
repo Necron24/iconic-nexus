@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = await createClient();
 
-  const [{ data: projects }, { data: profiles }] = await Promise.all([
+  const [{ data: projects }, { data: profiles }, { data: devlogs }] = await Promise.all([
     supabase
       .from("projects")
       .select("slug, updated_at")
@@ -21,7 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("profiles")
       .select("username, updated_at")
       .not("username", "is", null)
-      .neq("username", "")
+      .neq("username", ""),
+
+    supabase
+      .from("project_updates")
+      .select("id, updated_at")
+      .eq("is_published", true)
   ]);
 
   return [
@@ -90,6 +95,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5
+    })),
+
+    ...(devlogs ?? []).map((devlog) => ({
+      url: `${baseUrl}/devlogs/${devlog.id}`,
+      lastModified: devlog.updated_at ? new Date(devlog.updated_at) : new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.65
     }))
   ];
 }

@@ -8,12 +8,27 @@ Published updates now load at `/devlogs`. The Devlogs link appears in both the
 desktop and mobile menus. Visitors can search updates, filter by update type,
 change the date order and open the related project's devlog section.
 
+The community experience also includes:
+
+- short feed previews and full devlog detail pages;
+- reactions, comments and one-level replies;
+- saved devlogs in the user dashboard;
+- project following and new-devlog notifications;
+- sharing, reporting and testing-campaign calls to action;
+- owner/admin comment moderation.
+
 ## One-time Supabase update
 
 Run this file in the Supabase SQL Editor before deploying the new code:
 
 ```text
 supabase/devlog_customization_update.sql
+```
+
+Then run:
+
+```text
+supabase/devlog_community_update.sql
 ```
 
 It adds:

@@ -29,7 +29,7 @@ const labels: Record<string, string> = {
   announcement: "Announcement"
 };
 
-export function DevlogCard({ update }: { update: Devlog }) {
+export function DevlogCard({ update, showDetailLink = true }: { update: Devlog; showDetailLink?: boolean }) {
   const accent = update.accent_color ?? DEFAULT_DEVLOG_STYLE.accent_color;
   const layout = update.layout_style ?? DEFAULT_DEVLOG_STYLE.layout_style;
   const alignment = update.text_align ?? DEFAULT_DEVLOG_STYLE.text_align;
@@ -61,9 +61,17 @@ export function DevlogCard({ update }: { update: Devlog }) {
             </span>
             {update.version_label && <span className="badge">{update.version_label}</span>}
           </div>
-          <h3 className={`${layout === "compact" ? "mt-3 text-2xl" : "mt-4 text-3xl sm:text-4xl"} font-black`} style={{ color: accent, fontFamily: headingFont }}>
-            {update.title}
-          </h3>
+          {showDetailLink ? (
+            <Link href={`/devlogs/${update.id}`}>
+              <h3 className={`${layout === "compact" ? "mt-3 text-2xl" : "mt-4 text-3xl sm:text-4xl"} font-black transition hover:brightness-125`} style={{ color: accent, fontFamily: headingFont }}>
+                {update.title}
+              </h3>
+            </Link>
+          ) : (
+            <h3 className={`${layout === "compact" ? "mt-3 text-2xl" : "mt-4 text-3xl sm:text-4xl"} font-black`} style={{ color: accent, fontFamily: headingFont }}>
+              {update.title}
+            </h3>
+          )}
           {update.image_url && layout !== "showcase" && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={update.image_url} alt="" className={`mt-5 max-h-[28rem] w-full rounded-xl ${imageFit === "contain" ? "bg-black/35 object-contain" : "object-cover"}`} />
@@ -76,6 +84,11 @@ export function DevlogCard({ update }: { update: Devlog }) {
             {update.release_url && (
               <Link href={update.release_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-white/10" style={{ borderColor: `${accent}66`, color: accent }}>
                 Open release <ExternalLink size={15} />
+              </Link>
+            )}
+            {showDetailLink && (
+              <Link href={`/devlogs/${update.id}#community`} className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-white/10" style={{ borderColor: `${accent}66`, color: accent }}>
+                React &amp; comment
               </Link>
             )}
           </div>

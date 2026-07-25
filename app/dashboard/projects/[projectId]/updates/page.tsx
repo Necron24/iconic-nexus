@@ -31,7 +31,7 @@ export default async function ProjectUpdatesPage({
 
   const { data: updates, error } = await supabase
     .from("project_updates")
-    .select("id,title,body,version_label,update_type,is_published,created_at,updated_at")
+    .select("id,title,body,version_label,update_type,is_published,created_at,updated_at,published_at,accent_color")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
 
@@ -60,7 +60,10 @@ export default async function ProjectUpdatesPage({
                   <div className="mb-2 flex flex-wrap gap-2"><span className="badge">{labels[update.update_type] ?? update.update_type}</span>{update.version_label && <span className="badge">{update.version_label}</span>}<span className="badge">{update.is_published ? "Published" : "Draft"}</span></div>
                   <h3 className="text-xl font-black">{update.title}</h3>
                   <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-soft">{update.body}</p>
-                  <p className="mt-3 text-xs text-soft">Created {new Date(update.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-soft">
+                    <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: update.accent_color ?? "#57E6FF" }} />Custom design</span>
+                    <span>{update.is_published ? `Published ${new Date(update.published_at ?? update.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}` : "Private draft"}</span>
+                  </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
                   <Link href={`/dashboard/projects/${projectId}/updates/${update.id}/edit`} className="btn-secondary !px-4 !py-2 gap-2"><Pencil size={15}/>Edit</Link>

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { CampaignForm } from "@/components/campaign-form";
 import { createCampaign } from "@/app/dashboard/campaigns/actions";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentPlan } from "@/lib/subscriptions/current-plan";
 
 export default async function NewCampaignPage({
   params,
@@ -16,12 +17,11 @@ export default async function NewCampaignPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: project }, { data: profile }, { data: planRows }] = await Promise.all([
+  const [{ data: project }, { data: profile }, plan] = await Promise.all([
     supabase.from("projects").select("id, owner_id, name").eq("id", projectId).maybeSingle(),
     supabase.from("profiles").select("credits").eq("id", user.id).single(),
-    supabase.rpc("current_plan", { p_profile_id: user.id })
+    getCurrentPlan(supabase, user.id)
   ]);
-  const plan = Array.isArray(planRows) ? planRows[0] : planRows;
 
   if (!project || project.owner_id !== user.id) notFound();
 

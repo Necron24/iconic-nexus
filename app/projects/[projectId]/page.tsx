@@ -4,15 +4,7 @@ import { ExternalLink, FileText, ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ScreenshotGallery } from "@/components/screenshot-gallery";
 import { ShareButton } from "@/components/share-button";
-
-const updateLabels: Record<string, string> = {
-  development: "Development update",
-  release: "New release",
-  bug_fixes: "Bug fixes",
-  testing_needed: "Testing needed",
-  major_update: "Major update",
-  announcement: "Announcement"
-};
+import { DevlogCard } from "@/components/updates/devlog-card";
 
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -30,7 +22,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   const screenshots = [...(project.project_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const { data: updates } = await supabase
     .from("project_updates")
-    .select("id,title,body,version_label,update_type,image_url,release_url,created_at")
+    .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
     .eq("project_id", project.id)
     .eq("is_published", true)
     .order("created_at", { ascending: false })
@@ -68,7 +60,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
 
               <div className="card p-6">
                 <div className="flex items-center gap-3"><FileText className="text-cyan"/><div><h2 className="text-2xl font-black">Updates &amp; devlogs</h2><p className="text-sm text-soft">Releases, progress reports and testing announcements.</p></div></div>
-                {!updates?.length ? <p className="mt-5 rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No public updates have been posted yet.</p> : <div className="mt-5 space-y-5">{updates.map((update) => <article key={update.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">{update.image_url && <img src={update.image_url} alt="" className="max-h-80 w-full object-cover"/>}<div className="p-5"><div className="flex flex-wrap gap-2"><span className="badge">{updateLabels[update.update_type] ?? update.update_type}</span>{update.version_label && <span className="badge">{update.version_label}</span>}</div><h3 className="mt-3 text-xl font-black">{update.title}</h3><p className="mt-2 whitespace-pre-wrap leading-7 text-soft">{update.body}</p><div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-soft">Published {new Date(update.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}</p>{update.release_url && <Link href={update.release_url} target="_blank" rel="noreferrer" className="btn-secondary !px-4 !py-2 gap-2">Open release <ExternalLink size={15}/></Link>}</div></div></article>)}</div>}
+                {!updates?.length ? <p className="mt-5 rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No public updates have been posted yet.</p> : <div className="mt-5 space-y-6">{updates.map((update) => <DevlogCard key={update.id} update={update} />)}</div>}
               </div>
             </div>
 

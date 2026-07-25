@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Bell, HelpCircle, LogOut, Menu, X } from "lucide-react";
+import { Bell, HelpCircle, LogOut, Menu, Newspaper, Trophy, X } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 
 export function MobileMenu({
@@ -40,9 +40,25 @@ export function MobileMenu({
             <Link
               onClick={() => setOpen(false)}
               className="rounded-xl px-4 py-3 hover:bg-white/5"
+              href="/devlogs"
+            >
+              <span className="flex items-center gap-2"><Newspaper size={17} /> Devlogs</span>
+            </Link>
+
+            <Link
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-4 py-3 hover:bg-white/5"
               href="/campaigns"
             >
               Campaigns
+            </Link>
+
+            <Link
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-4 py-3 hover:bg-white/5"
+              href="/wall-of-fame"
+            >
+              <span className="flex items-center gap-2"><Trophy size={17} /> Wall of Fame</span>
             </Link>
 
             <Link

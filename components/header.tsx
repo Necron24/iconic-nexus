@@ -102,6 +102,9 @@ export async function Header() {
           <Link href="/discover" className="hover:text-white">
             Discover
           </Link>
+          <Link href="/devlogs" className="hover:text-white">
+            Devlogs
+          </Link>
           <Link href="/campaigns" className="hover:text-white">
             Campaigns
           </Link>

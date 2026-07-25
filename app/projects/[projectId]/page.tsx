@@ -58,7 +58,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
 
               {screenshots.length > 0 && <div className="card p-6"><h2 className="text-2xl font-black">Screenshots</h2><p className="mt-2 text-sm text-soft">Click or tap a thumbnail to view the full-size screenshot.</p><div className="mt-5"><ScreenshotGallery images={screenshots} projectName={project.name} /></div></div>}
 
-              <div className="card p-6">
+              <div id="devlogs" className="card scroll-mt-28 p-6">
                 <div className="flex items-center gap-3"><FileText className="text-cyan"/><div><h2 className="text-2xl font-black">Updates &amp; devlogs</h2><p className="text-sm text-soft">Releases, progress reports and testing announcements.</p></div></div>
                 {!updates?.length ? <p className="mt-5 rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No public updates have been posted yet.</p> : <div className="mt-5 space-y-6">{updates.map((update) => <DevlogCard key={update.id} update={update} />)}</div>}
               </div>

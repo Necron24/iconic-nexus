@@ -2,6 +2,12 @@
 
 The code in this project includes the Iconic Nexus devlog design studio.
 
+## Public discovery
+
+Published updates now load at `/devlogs`. The Devlogs link appears in both the
+desktop and mobile menus. Visitors can search updates, filter by update type,
+change the date order and open the related project's devlog section.
+
 ## One-time Supabase update
 
 Run this file in the Supabase SQL Editor before deploying the new code:

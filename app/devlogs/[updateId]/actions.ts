@@ -6,6 +6,21 @@ import { createClient } from "@/lib/supabase/server";
 
 const REACTIONS = new Set(["fire", "love", "clap", "helpful"]);
 
+async function trackEngagement(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  eventType: "reaction" | "save" | "follow" | "comment",
+  targetType: "devlog" | "project",
+  targetId: string
+) {
+  await supabase.rpc("track_analytics_event", {
+    p_event_type: eventType,
+    p_target_type: targetType,
+    p_target_id: targetId,
+    p_visitor_hash: null,
+    p_source: "iconic_nexus"
+  });
+}
+
 function detailPath(updateId: string) {
   return `/devlogs/${updateId}`;
 }
@@ -34,6 +49,7 @@ export async function toggleDevlogReaction(updateId: string, formData: FormData)
     .eq("profile_id", user.id)
     .maybeSingle();
 
+  let added = false;
   if (existing?.reaction === reaction) {
     const { error } = await supabase.from("devlog_reactions").delete().eq("update_id", updateId).eq("profile_id", user.id);
     if (error) fail(updateId, error.message);
@@ -44,10 +60,13 @@ export async function toggleDevlogReaction(updateId: string, formData: FormData)
       .eq("update_id", updateId)
       .eq("profile_id", user.id);
     if (error) fail(updateId, error.message);
+    added = true;
   } else {
     const { error } = await supabase.from("devlog_reactions").insert({ update_id: updateId, profile_id: user.id, reaction });
     if (error) fail(updateId, error.message);
+    added = true;
   }
+  if (added) await trackEngagement(supabase, "reaction", "devlog", updateId);
 
   revalidatePath(detailPath(updateId));
   revalidatePath("/devlogs");
@@ -66,6 +85,7 @@ export async function toggleDevlogBookmark(updateId: string) {
     ? await supabase.from("devlog_bookmarks").delete().eq("update_id", updateId).eq("profile_id", user.id)
     : await supabase.from("devlog_bookmarks").insert({ update_id: updateId, profile_id: user.id });
   if (error) fail(updateId, error.message);
+  if (!existing) await trackEngagement(supabase, "save", "devlog", updateId);
   revalidatePath(detailPath(updateId));
   revalidatePath("/dashboard/saved");
 }
@@ -87,6 +107,7 @@ export async function toggleProjectFollow(updateId: string, projectId: string) {
     ? await supabase.from("project_follows").delete().eq("project_id", projectId).eq("profile_id", user.id)
     : await supabase.from("project_follows").insert({ project_id: projectId, profile_id: user.id });
   if (error) fail(updateId, error.message);
+  if (!existing) await trackEngagement(supabase, "follow", "project", projectId);
   revalidatePath(detailPath(updateId));
 }
 
@@ -103,6 +124,7 @@ export async function addDevlogComment(updateId: string, formData: FormData) {
     body
   });
   if (error) fail(updateId, error.message);
+  await trackEngagement(supabase, "comment", "devlog", updateId);
 
   revalidatePath(detailPath(updateId));
   revalidatePath("/devlogs");

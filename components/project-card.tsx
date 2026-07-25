@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FlaskConical, ImageIcon, Star, UserRound, Users } from "lucide-react";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 type Project = {
   id: string;
@@ -79,7 +80,8 @@ export function ProjectCard({
       : `Testing · ${activeCampaignReward} credit${activeCampaignReward === 1 ? "" : "s"}`;
 
   return (
-    <article className="card overflow-hidden">
+    <article className="card relative overflow-hidden">
+      <AnalyticsTracker eventType="impression" targetType="project" targetId={project.id} />
       <div className="relative grid h-40 place-items-center overflow-hidden bg-white/5">
         {project.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element

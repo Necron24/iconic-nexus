@@ -31,6 +31,23 @@ Then run:
 supabase/devlog_community_update.sql
 ```
 
+Finally run:
+
+```text
+supabase/creator_analytics_update.sql
+```
+
+Add a long random server-only value in Vercel:
+
+```text
+ANALYTICS_HASH_SALT=your-long-random-secret
+```
+
+Creator analytics includes privacy-safe impressions, views, unique visitors,
+link clicks, shares, saves, follows, reactions, comments, campaign joins,
+conversion funnels, traffic sources, time-series charts and top-content tables.
+Free accounts receive 30 days, Pro 90 days and Studio one year plus CSV exports.
+
 It adds:
 
 - publish dates;

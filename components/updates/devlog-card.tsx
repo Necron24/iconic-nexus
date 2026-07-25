@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { TrackedLink } from "@/components/tracked-link";
 import {
   DEFAULT_DEVLOG_STYLE,
   bodyFontStacks,
@@ -82,9 +83,9 @@ export function DevlogCard({ update, showDetailLink = true }: { update: Devlog; 
               Published {new Date(update.published_at ?? update.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}
             </p>
             {update.release_url && (
-              <Link href={update.release_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-white/10" style={{ borderColor: `${accent}66`, color: accent }}>
+              <TrackedLink href={update.release_url} target="_blank" rel="noreferrer" targetType="devlog" targetId={update.id} className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-white/10" style={{ borderColor: `${accent}66`, color: accent }}>
                 Open release <ExternalLink size={15} />
-              </Link>
+              </TrackedLink>
             )}
             {showDetailLink && (
               <Link href={`/devlogs/${update.id}#community`} className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-white/10" style={{ borderColor: `${accent}66`, color: accent }}>

@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ScreenshotGallery } from "@/components/screenshot-gallery";
 import { ShareButton } from "@/components/share-button";
 import { DevlogCard } from "@/components/updates/devlog-card";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { TrackedLink } from "@/components/tracked-link";
 
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -29,7 +31,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     .limit(20);
 
   return (
-    <section className="container-page py-14">
+    <section className="container-page relative py-14">
+      <AnalyticsTracker eventType="view" targetType="project" targetId={project.id} />
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
         <div className="grid h-56 place-items-center overflow-hidden bg-white/5 md:h-80">
           {project.cover_url ? <img src={project.cover_url} alt="" className="h-full w-full object-cover" /> : <ImageIcon className="text-white/20" size={54} />}
@@ -47,8 +50,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             </div>
 
             <div className="flex shrink-0 flex-wrap gap-2">
-              <ShareButton title={project.name} text={project.short_description} path={`/projects/${project.slug}`} />
-              {project.testing_url && <a href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary gap-2">Open test link <ExternalLink size={17} /></a>}
+              <ShareButton title={project.name} text={project.short_description} path={`/projects/${project.slug}`} analyticsTargetType="project" analyticsTargetId={project.id} />
+              {project.testing_url && <TrackedLink href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary gap-2" targetType="project" targetId={project.id}>Open test link <ExternalLink size={17} /></TrackedLink>}
             </div>
           </div>
 

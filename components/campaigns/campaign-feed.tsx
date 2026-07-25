@@ -6,6 +6,7 @@ import { CalendarDays, Clock3, Coins, Filter, LoaderCircle, RefreshCw, Rocket, S
 import { createClient } from "@/lib/supabase/client";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 import { ShareButton } from "@/components/share-button";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const PAGE_SIZE = 10;
 const POLL_MS = 60000;
@@ -161,7 +162,8 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
             const percentage = Math.min(100, Math.round((joined / campaign.tester_goal) * 100));
             const daysLeft = campaign.ends_at ? Math.max(0, Math.ceil((new Date(campaign.ends_at).getTime() - Date.now()) / 86400000)) : campaign.duration_days;
             return (
-              <article key={campaign.id} className={`card grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center ${campaign.is_boosted ? "border-lime/40 bg-lime/[0.04]" : ""}`}>
+              <article key={campaign.id} className={`card relative grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center ${campaign.is_boosted ? "border-lime/40 bg-lime/[0.04]" : ""}`}>
+                <AnalyticsTracker eventType="impression" targetType="campaign" targetId={campaign.id} />
                 <div className="flex gap-4">
                   {campaign.icon_url ? <img src={campaign.icon_url} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-lime text-2xl font-black text-ink">{campaign.project_name.charAt(0).toUpperCase()}</div>}
                   <div className="min-w-0 flex-1">
@@ -205,6 +207,8 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                     text={`Join the ${campaign.title} testing campaign for ${campaign.project_name} on Iconic Nexus.`}
                     path={`/campaigns/${campaign.id}`}
                     className="btn-secondary gap-2"
+                    analyticsTargetType="campaign"
+                    analyticsTargetId={campaign.id}
                   />
                 </div>
               </article>

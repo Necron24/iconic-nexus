@@ -180,6 +180,16 @@ export async function joinCampaign(campaignId: string, formData: FormData) {
     redirect(withCampaignQuery("error", "The campaign could not be joined."));
   }
 
+  if (data === "joined") {
+    await supabase.rpc("track_analytics_event", {
+      p_event_type: "campaign_join",
+      p_target_type: "campaign",
+      p_target_id: campaignId,
+      p_visitor_hash: null,
+      p_source: "iconic_nexus"
+    });
+  }
+
   revalidatePath(campaignPath);
   revalidatePath("/campaigns");
   revalidatePath("/dashboard/testing");

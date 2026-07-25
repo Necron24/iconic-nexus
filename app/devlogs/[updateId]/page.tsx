@@ -5,6 +5,7 @@ import { BellPlus, Bookmark, BookmarkCheck, Flag, MessageCircle, Rocket, UserRou
 import { createClient } from "@/lib/supabase/server";
 import { DevlogCard } from "@/components/updates/devlog-card";
 import { ShareButton } from "@/components/share-button";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 import {
   addDevlogComment,
   removeDevlogComment,
@@ -133,7 +134,8 @@ export default async function DevlogDetailPage({
   const canModerate = user?.id === project.owner_id || Boolean(viewerProfile?.is_admin);
 
   return (
-    <section className="container-page py-10">
+    <section className="container-page relative py-10">
+      <AnalyticsTracker eventType="view" targetType="devlog" targetId={updateId} />
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Link href="/devlogs" className="text-sm font-bold text-cyan hover:text-white">← Back to all devlogs</Link>
         {!update.is_published && <span className="badge border-amber-300/30 bg-amber-300/10 text-amber-100">Private draft preview</span>}
@@ -195,7 +197,7 @@ export default async function DevlogDetailPage({
           <form action={toggleDevlogBookmark.bind(null, updateId)}>
             <button className="btn-secondary !px-4 !py-2 gap-2">{bookmarked ? <BookmarkCheck size={16} className="text-lime" /> : <Bookmark size={16} />} {bookmarked ? "Saved" : "Save"}</button>
           </form>
-          <ShareButton title={update.title} text={`Read ${update.title} on Iconic Nexus.`} path={`/devlogs/${updateId}`} className="btn-secondary !px-4 !py-2 gap-2" />
+          <ShareButton title={update.title} text={`Read ${update.title} on Iconic Nexus.`} path={`/devlogs/${updateId}`} className="btn-secondary !px-4 !py-2 gap-2" analyticsTargetType="devlog" analyticsTargetId={updateId} />
           <Link href={`/report?targetType=devlog&targetId=${updateId}`} className="btn-secondary !px-4 !py-2 gap-2 text-red-200"><Flag size={15} /> Report</Link>
         </div>
       </section>

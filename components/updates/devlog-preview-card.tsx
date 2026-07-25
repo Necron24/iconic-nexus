@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bookmark, MessageCircle, Sparkles } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 import {
   DEFAULT_DEVLOG_STYLE,
   devlogBackground,
@@ -42,7 +43,8 @@ export function DevlogPreviewCard({ update }: { update: DevlogPreview }) {
   const headingFont = headingFontStacks[update.heading_font ?? "display"] ?? headingFontStacks.display;
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-white/10 transition hover:-translate-y-0.5 hover:border-white/20">
+    <article className="group relative overflow-hidden rounded-3xl border border-white/10 transition hover:-translate-y-0.5 hover:border-white/20">
+      <AnalyticsTracker eventType="impression" targetType="devlog" targetId={update.id} />
       <div className="p-4 sm:p-6" style={{ background: devlogBackground(update) }}>
         <div className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur-xl sm:p-7">
           <div className="flex flex-col gap-5 md:flex-row">
@@ -84,7 +86,7 @@ export function DevlogPreviewCard({ update }: { update: DevlogPreview }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="badge gap-1.5"><Sparkles size={13} /> {update.reaction_count}</span>
           <span className="badge gap-1.5"><MessageCircle size={13} /> {update.comment_count}</span>
-          <ShareButton title={update.title} text={`Read ${update.title} on Iconic Nexus.`} path={`/devlogs/${update.id}`} className="btn-secondary !px-3 !py-2 gap-2" />
+          <ShareButton title={update.title} text={`Read ${update.title} on Iconic Nexus.`} path={`/devlogs/${update.id}`} className="btn-secondary !px-3 !py-2 gap-2" analyticsTargetType="devlog" analyticsTargetId={update.id} />
           <Link href={`/devlogs/${update.id}`} className="btn-primary !px-4 !py-2 gap-2">Read devlog <Bookmark size={15} /></Link>
         </div>
       </div>

@@ -21,6 +21,8 @@ import { createClient } from "@/lib/supabase/server";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 import { ShareButton } from "@/components/share-button";
 import { PrivateCampaignJoinForm } from "@/components/private-campaign-join-form";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { TrackedLink } from "@/components/tracked-link";
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
@@ -144,7 +146,8 @@ export default async function CampaignPage({
   const originalBudget = reservedCredits + spentCredits;
 
   return (
-    <section className="container-page py-14">
+    <section className="container-page relative py-14">
+      {!campaign.is_private && <AnalyticsTracker eventType="view" targetType="campaign" targetId={campaign.id} />}
       {success && (
         <div className="mb-5 rounded-xl border border-lime/30 bg-lime/10 p-4 text-sm text-lime">
           {success}
@@ -218,7 +221,7 @@ export default async function CampaignPage({
                   />
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <ShareButton title={campaign.title} text={`Testing campaign for ${project.name}`} path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`} />
+                  <ShareButton title={campaign.title} text={`Testing campaign for ${project.name}`} path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`} analyticsTargetType={campaign.is_private ? undefined : "campaign"} analyticsTargetId={campaign.is_private ? undefined : campaign.id} />
                 </div>
               </div>
             </div>
@@ -285,14 +288,16 @@ export default async function CampaignPage({
                 {project.short_description}
               </p>
               {project.testing_url && (
-                <a
+                <TrackedLink
                   href={project.testing_url}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-secondary mt-5 gap-2"
+                  targetType="campaign"
+                  targetId={campaign.id}
                 >
                   Open testing link <ExternalLink size={17} />
-                </a>
+                </TrackedLink>
               )}
             </div>
 

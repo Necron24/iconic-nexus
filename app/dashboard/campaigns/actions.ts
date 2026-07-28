@@ -71,6 +71,8 @@ export async function createCampaign(projectId: string, formData: FormData) {
       await supabase.rpc("change_funded_campaign_status", { p_campaign_id: campaignId, p_next_status: "cancelled" });
       fail(path, privacyError.message);
     }
+  } else {
+    await supabase.rpc("notify_campaign_followers", { p_campaign_id: campaignId });
   }
 
   revalidatePath("/campaigns");

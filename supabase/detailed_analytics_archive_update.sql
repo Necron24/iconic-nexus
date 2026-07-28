@@ -267,7 +267,7 @@ daily as (
   from events group by event_day
 ),
 series as (
-  select d::date day,coalesce(x.impressions,0)::integer impressions,coalesce(x.views,0)::integer views,
+  select d::date as "day",coalesce(x.impressions,0)::integer impressions,coalesce(x.views,0)::integer views,
     coalesce(x.engagements,0)::integer engagements,coalesce(x.conversions,0)::integer conversions
   from settings s cross join generate_series(current_date-(s.days-1),current_date,interval '1 day') d
   left join daily x on x.event_day=d::date
@@ -337,7 +337,7 @@ select jsonb_build_object(
     'comments',(select count(*) from events where event_type='comment'),
     'campaign_joins',(select count(*) from events where event_type='campaign_join')
   ),
-  'series',coalesce((select jsonb_agg(to_jsonb(s) order by s.day) from series s),'[]'::jsonb),
+  'series',coalesce((select jsonb_agg(to_jsonb(s) order by s."day") from series s),'[]'::jsonb),
   'projects',coalesce((select jsonb_agg(to_jsonb(p) order by p.views desc,p.impressions desc) from project_metrics p),'[]'::jsonb),
   'devlogs',coalesce((select jsonb_agg(to_jsonb(d) order by d.views desc,d.impressions desc) from devlog_metrics d),'[]'::jsonb),
   'campaigns',coalesce((select jsonb_agg(to_jsonb(c) order by c.views desc,c.impressions desc) from campaign_metrics c),'[]'::jsonb),

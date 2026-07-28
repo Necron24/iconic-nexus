@@ -14,6 +14,7 @@ const links = [
   ["/dashboard/credits", "Credits"],
   ["/dashboard/boosts", "Boosts"],
   ["/dashboard/notifications", "Notifications"],
+  ["/dashboard/following", "Following"],
   ["/dashboard/saved", "Saved"],
   ["/dashboard/profile", "Profile"],
   ["/dashboard/account", "Account"],

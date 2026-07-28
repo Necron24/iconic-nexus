@@ -7,6 +7,8 @@ import { ProjectCard } from "@/components/project-card";
 import { ShareButton } from "@/components/share-button";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
+import { FollowButton } from "@/components/follow-button";
+import { toggleCreatorFollow } from "@/app/following/actions";
 
 const accentMap: Record<string, string> = {
   lime: '#9EFF3A',
@@ -26,6 +28,7 @@ const accentMap: Record<string, string> = {
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const { data: p } = await supabase
     .from('profiles')
     .select('id,username,display_name,avatar_url,banner_url,bio,headline,country,role,tester_reputation,developer_reputation,accent_color,website_url,github_url,social_url,created_at,profile_theme,profile_card_style,banner_overlay,avatar_shape,profile_button_style,profile_layout,show_website,show_github,show_social,show_projects,show_reputation,show_badges,show_testing_stats')
@@ -34,7 +37,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   if (!p) notFound();
 
-  const [{ data: projects }, { count: tests }] = await Promise.all([
+  const [{ data: projects }, { count: tests }, { count: followerCount }, followResult] = await Promise.all([
     supabase
       .from('projects')
       .select('id,slug,name,type,platform,stage,short_description,icon_url,cover_url')
@@ -46,8 +49,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       .from('campaign_members')
       .select('id', { count: 'exact', head: true })
       .eq('tester_id', p.id)
-      .eq('status', 'approved')
+      .eq('status', 'approved'),
+    supabase.from("creator_follows").select("creator_id", { count: "exact", head: true }).eq("creator_id", p.id),
+    user && user.id !== p.id
+      ? supabase.from("creator_follows").select("creator_id").eq("creator_id", p.id).eq("follower_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null })
   ]);
+  const followingCreator = Boolean(followResult.data);
 
   const accent = accentMap[p.accent_color || 'lime'] || accentMap.lime;
   const style = { '--profile-accent': accent } as CSSProperties;
@@ -99,6 +107,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
 
             <div className="flex flex-wrap gap-2 pb-2">
+              {user?.id !== p.id && (
+                <FollowButton
+                  action={toggleCreatorFollow.bind(null, p.id, `/profiles/${p.username}`)}
+                  following={followingCreator}
+                  kind="creator"
+                  count={followerCount ?? 0}
+                />
+              )}
               <ShareButton title={`${p.display_name || p.username} on Iconic Nexus`} text={p.headline || p.bio || undefined} path={`/profiles/${p.username}`} analyticsTargetType="profile" analyticsTargetId={p.id} />
               {p.show_website !== false && p.website_url && (
                 <TrackedLink href={p.website_url} target="_blank" rel="noreferrer" targetType="profile" targetId={p.id} className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bold text-ink transition hover:scale-[1.02]" style={accentButton}>

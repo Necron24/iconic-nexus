@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { FlaskConical, ImageIcon, Star, UserRound, Users } from "lucide-react";
+import { FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 type Project = {
@@ -26,10 +28,14 @@ type Project = {
 
 export function ProjectCard({
   project,
-  currentUserId
+  currentUserId,
+  following = false,
+  onToggleFollow
 }: {
   project: Project;
   currentUserId?: string | null;
+  following?: boolean;
+  onToggleFollow?: () => void;
 }) {
   const isOwnProject = Boolean(currentUserId && project.owner_id === currentUserId);
   const ownerName =
@@ -154,9 +160,10 @@ export function ProjectCard({
           </span>
         </div>
 
-        <Link href={`/projects/${project.slug}`} className="btn-secondary w-full">
-          View project
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/projects/${project.slug}`} className="btn-secondary flex-1">View project</Link>
+          {onToggleFollow && !isOwnProject && <button type="button" onClick={onToggleFollow} className={following ? "btn-secondary !px-3 text-lime" : "btn-secondary !px-3"} aria-label={following ? `Unfollow ${project.name}` : `Follow ${project.name}`} title={following ? "Following project" : "Follow project"}>{following ? <UserCheck size={17}/> : <UserPlus size={17}/>}</button>}
+        </div>
       </div>
     </article>
   );

@@ -23,6 +23,8 @@ import { ShareButton } from "@/components/share-button";
 import { PrivateCampaignJoinForm } from "@/components/private-campaign-join-form";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
+import { FollowButton } from "@/components/follow-button";
+import { toggleCampaignWatch, toggleProjectFollow } from "@/app/following/actions";
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
@@ -89,8 +91,9 @@ export default async function CampaignPage({
     : project.profiles;
 
   const owner = user?.id === project.owner_id;
+  const campaignReturnPath = `/campaigns/${campaign.id}${suppliedCode ? `?code=${encodeURIComponent(suppliedCode)}` : ""}`;
 
-  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }] =
+  const [{ data: joinedCount }, { data: membership }, { data: ownerMembers }, projectFollowResult, campaignWatchResult] =
     await Promise.all([
       supabase.rpc("get_campaign_member_count", {
         p_campaign_id: campaign.id
@@ -108,7 +111,13 @@ export default async function CampaignPage({
             .from("campaign_members")
             .select("id,status,joined_at,submitted_at,approved_at")
             .eq("campaign_id", campaign.id)
-        : Promise.resolve({ data: [] })
+        : Promise.resolve({ data: [] }),
+      user && !owner
+        ? supabase.from("project_follows").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      user && !owner
+        ? supabase.from("campaign_watches").select("campaign_id").eq("campaign_id", campaign.id).eq("profile_id", user.id).maybeSingle()
+        : Promise.resolve({ data: null })
     ]);
 
   const joined = Number(joinedCount ?? 0);
@@ -221,6 +230,12 @@ export default async function CampaignPage({
                   />
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
+                  {!owner && (
+                    <>
+                      <FollowButton action={toggleProjectFollow.bind(null, project.id, campaignReturnPath)} following={Boolean(projectFollowResult.data)} kind="project" />
+                      <FollowButton action={toggleCampaignWatch.bind(null, campaign.id, campaignReturnPath)} following={Boolean(campaignWatchResult.data)} kind="campaign" />
+                    </>
+                  )}
                   <ShareButton title={campaign.title} text={`Testing campaign for ${project.name}`} path={`/campaigns/${campaign.id}${campaign.is_private && campaign.access_code ? `?code=${encodeURIComponent(campaign.access_code)}` : ""}`} analyticsTargetType={campaign.is_private ? undefined : "campaign"} analyticsTargetId={campaign.is_private ? undefined : campaign.id} />
                 </div>
               </div>

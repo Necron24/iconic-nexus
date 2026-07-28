@@ -1,6 +1,6 @@
 "use client";
 
-export type AnalyticsEventType = "impression" | "view" | "link_click" | "share";
+export type AnalyticsEventType = "impression" | "view" | "link_click" | "share" | "follow";
 export type AnalyticsTargetType = "project" | "devlog" | "campaign" | "profile";
 
 const VISITOR_KEY = "iconic_nexus_analytics_visitor";

@@ -8,14 +8,17 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [profileResult, projectsResult, completedTestsResult, campaignsResult, reviewsResult, activeTestsResult, unreadResult] = await Promise.all([
+  const [profileResult, projectsResult, publishedProjectsResult, completedTestsResult, campaignsResult, reviewsResult, activeTestsResult, unreadResult, projectFollowsResult, devlogsResult] = await Promise.all([
     supabase.from("profiles").select("credits, tester_reputation, display_name, username, country, bio, role").eq("id", user.id).single(),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id).eq("is_published", true).is("archived_at", null),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).eq("status", "approved"),
     supabase.from("testing_campaigns").select("id, title, tester_goal, is_private, projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("status", "active").limit(1),
     supabase.from("campaign_members").select("id, testing_campaigns!inner(projects!inner(owner_id))", { count: "exact", head: true }).eq("testing_campaigns.projects.owner_id", user.id).eq("status", "submitted"),
     supabase.from("campaign_members").select("id", { count: "exact", head: true }).eq("tester_id", user.id).in("status", ["joined", "in_progress"]),
-    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("profile_id", user.id).eq("is_read", false)
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("profile_id", user.id).eq("is_read", false),
+    supabase.from("project_follows").select("project_id", { count: "exact", head: true }).eq("profile_id", user.id),
+    supabase.from("project_updates").select("id,projects!inner(owner_id)", { count: "exact", head: true }).eq("projects.owner_id", user.id).eq("is_published", true).is("archived_at", null)
   ]);
 
   const profile = profileResult.data;
@@ -40,12 +43,15 @@ export default async function DashboardPage() {
   const role = profile?.role === "tester" || profile?.role === "developer" ? profile.role : "both";
   const profileComplete = Boolean(profile?.display_name && profile?.username && profile?.country && profile?.bio);
   const projectCount = projectsResult.count ?? 0;
+  const publishedProjectCount = publishedProjectsResult.count ?? 0;
   const completedTests = completedTestsResult.count ?? 0;
+  const followedProjectCount = projectFollowsResult.count ?? 0;
+  const devlogCount = devlogsResult.count ?? 0;
   const activeCampaignCountForOwner = campaignsResult.data?.length ?? 0;
 
   const testerChecklist = [
     { label: "Complete your profile", description: "Add a public name, country and bio so creators know who is testing.", complete: profileComplete, href: "/dashboard/profile" },
-    { label: "Browse testing campaigns", description: "Find an app or game that matches your device and interests.", complete: activeTests > 0 || completedTests > 0, href: "/campaigns" },
+    { label: "Follow three projects", description: "Build a personal feed and receive useful release and campaign updates.", complete: followedProjectCount >= 3, href: "/discover" },
     { label: "Join your first campaign", description: "Read every requirement before joining and starting the test.", complete: activeTests > 0 || completedTests > 0, href: "/dashboard/testing" },
     { label: "Complete your first approved test", description: "Submit useful feedback and earn your first campaign reward.", complete: completedTests > 0, href: "/dashboard/testing" }
   ];
@@ -53,7 +59,8 @@ export default async function DashboardPage() {
   const creatorChecklist = [
     { label: "Complete your profile", description: "Add a public identity so testers know who is behind the project.", complete: profileComplete, href: "/dashboard/profile" },
     { label: "Create your first project", description: "Add an app or game with clear details, links and media.", complete: projectCount > 0, href: "/dashboard/projects/new" },
-    { label: "Publish your project", description: "Unpublished projects remain private and cannot appear publicly.", complete: false, href: "/dashboard/projects" },
+    { label: "Publish your project", description: "Unpublished projects remain private and cannot appear publicly.", complete: publishedProjectCount > 0, href: "/dashboard/projects" },
+    { label: "Publish your first devlog", description: "Show followers what changed and what you are building next.", complete: devlogCount > 0, href: "/dashboard/projects" },
     { label: "Create your first active campaign", description: "Set requirements, testing time, tester goal and reward.", complete: activeCampaignCountForOwner > 0, href: "/dashboard/projects" }
   ];
 
@@ -61,7 +68,7 @@ export default async function DashboardPage() {
     ? testerChecklist
     : role === "developer"
       ? creatorChecklist
-      : [...testerChecklist.slice(0, 2), ...creatorChecklist.slice(1)];
+      : [testerChecklist[0], testerChecklist[1], ...creatorChecklist.slice(1)];
 
   return <>
     <OnboardingChecklist title={role === "tester" ? "Start testing on Iconic Nexus" : role === "developer" ? "Launch your first testing campaign" : "Set up your Iconic Nexus workspace"} items={checklistItems} />

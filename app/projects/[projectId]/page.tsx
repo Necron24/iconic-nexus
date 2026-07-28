@@ -7,6 +7,8 @@ import { ShareButton } from "@/components/share-button";
 import { DevlogCard } from "@/components/updates/devlog-card";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
+import { FollowButton } from "@/components/follow-button";
+import { toggleProjectFollow } from "@/app/following/actions";
 
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -23,14 +25,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
 
   const screenshots = [...(project.project_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
-  const { data: updates } = await supabase
-    .from("project_updates")
-    .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
-    .eq("project_id", project.id)
-    .eq("is_published", true)
-    .is("archived_at", null)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [{ data: updates }, { count: followerCount }, followResult] = await Promise.all([
+    supabase
+      .from("project_updates")
+      .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
+      .eq("project_id", project.id)
+      .eq("is_published", true)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase.from("project_follows").select("project_id", { count: "exact", head: true }).eq("project_id", project.id),
+    user && user.id !== project.owner_id
+      ? supabase.from("project_follows").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null })
+  ]);
 
   return (
     <section className="container-page relative py-14">
@@ -52,6 +60,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             </div>
 
             <div className="flex shrink-0 flex-wrap gap-2">
+              {user?.id !== project.owner_id && (
+                <FollowButton
+                  action={toggleProjectFollow.bind(null, project.id, `/projects/${project.slug}`)}
+                  following={Boolean(followResult.data)}
+                  kind="project"
+                  count={followerCount ?? 0}
+                />
+              )}
               <ShareButton title={project.name} text={project.short_description} path={`/projects/${project.slug}`} analyticsTargetType="project" analyticsTargetId={project.id} />
               {project.testing_url && <TrackedLink href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary gap-2" targetType="project" targetId={project.id}>Open test link <ExternalLink size={17} /></TrackedLink>}
             </div>

@@ -9,6 +9,7 @@ import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { FollowButton } from "@/components/follow-button";
 import { toggleProjectFollow } from "@/app/following/actions";
+import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -53,7 +54,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             <div className="flex gap-4">
               {project.icon_url ? <img src={project.icon_url} alt={`${project.name} icon`} className="h-20 w-20 rounded-2xl object-cover" /> : <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-lime text-3xl font-black text-ink">{project.name.charAt(0).toUpperCase()}</div>}
               <div>
-                <div className="mb-3 flex flex-wrap gap-2"><span className="badge">{project.type}</span><span className="badge">{project.platform}</span><span className="badge">{project.stage}</span>{project.genre && <span className="badge">{project.genre}</span>}</div>
+                <div className="mb-3 flex flex-wrap gap-2"><ProjectTypeBadge type={project.type}/><PlatformBadges platform={project.platform}/><StageBadge stage={project.stage}/>{project.genre && <span className="badge !px-3 !py-1.5">{project.genre}</span>}</div>
                 <h1 className="text-4xl font-black md:text-5xl">{project.name}</h1>
                 <p className="mt-3 max-w-2xl text-lg text-soft">{project.short_description}</p>
               </div>

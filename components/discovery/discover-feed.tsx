@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Filter, LoaderCircle, RefreshCw, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ProjectCard } from "@/components/project-card";
+import { PlatformBadges } from "@/components/project-meta";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 const PAGE_SIZE = 12;
@@ -130,7 +131,7 @@ export function DiscoverFeed({
       <div className="mb-6 rounded-2xl border border-cyan/20 bg-gradient-to-r from-cyan/[0.08] to-lime/[0.05] p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3"><Sparkles className="mt-0.5 shrink-0 text-cyan" size={21}/><div><p className="font-black">Personalised for you</p><p className="mt-1 text-sm text-soft">{personalization.hasSignals ? "Projects are prioritised using what you follow and test." : "Follow projects and join tests to improve your recommendations."}</p></div></div>
-          <div className="flex flex-wrap gap-2"><span className="badge capitalize">{personalization.role}</span>{personalization.platforms.map(platform => <span key={platform} className="badge">{platform}</span>)}</div>
+          <div className="flex flex-wrap gap-2"><span className="badge capitalize">{personalization.role}</span>{personalization.platforms.map(platform => <PlatformBadges key={platform} platform={platform} compact />)}</div>
         </div>
       </div>
     )}

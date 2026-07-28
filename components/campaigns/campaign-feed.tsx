@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CreatorTag } from "@/components/campaigns/creator-tag";
 import { ShareButton } from "@/components/share-button";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { CampaignStatusBadge, PlatformBadges, StageBadge } from "@/components/project-meta";
 
 const PAGE_SIZE = 10;
 const POLL_MS = 60000;
@@ -173,7 +174,7 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                           <Rocket size={13} /> Boosted
                         </span>
                       )}
-                      <span className="badge">{campaign.platform}</span><span className="badge">{campaign.stage}</span>
+                      <PlatformBadges platform={campaign.platform} compact /><StageBadge stage={campaign.stage} compact /><CampaignStatusBadge status="active" />
                     </div>
                     <h2 className="text-2xl font-black">{campaign.title}</h2>
                     <p className="mt-1 font-semibold text-white/80">{campaign.project_name}</p>
@@ -186,11 +187,11 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
                       compact
                       className="mt-4 w-full max-w-md"
                     />
-                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-soft">
-                      <span className="flex items-center gap-2"><Users size={16} /> {joined}/{campaign.tester_goal} testers</span>
-                      <span className="flex items-center gap-2"><CalendarDays size={16} /> {daysLeft} days left</span>
-                      <span className="flex items-center gap-2"><Clock3 size={16} /> {campaign.minimum_minutes}+ min</span>
-                      <span className="flex items-center gap-2"><Coins size={16} /> {campaign.reward_credits} credits</span>
+                    <div className="mt-4 grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+                      <span className="rounded-xl border border-white/10 bg-white/[0.035] p-3"><Users className="text-cyan" size={16} /><strong className="mt-2 block text-lg">{joined}/{campaign.tester_goal}</strong><span className="text-[10px] uppercase tracking-wide text-soft">Testers</span></span>
+                      <span className="rounded-xl border border-white/10 bg-white/[0.035] p-3"><CalendarDays className="text-amber-300" size={16} /><strong className="mt-2 block text-lg">{daysLeft}</strong><span className="text-[10px] uppercase tracking-wide text-soft">Days left</span></span>
+                      <span className="rounded-xl border border-white/10 bg-white/[0.035] p-3"><Clock3 className="text-violet-300" size={16} /><strong className="mt-2 block text-lg">{campaign.minimum_minutes}+</strong><span className="text-[10px] uppercase tracking-wide text-soft">Minutes</span></span>
+                      <span className="rounded-xl border border-lime/20 bg-lime/[0.055] p-3"><Coins className="text-lime" size={16} /><strong className="mt-2 block text-lg text-lime">{campaign.reward_credits}</strong><span className="text-[10px] uppercase tracking-wide text-soft">Credits</span></span>
                     </div>
                     <div className="mt-4 h-2 max-w-xl overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan" style={{ width: `${percentage}%` }} /></div>
                     {campaign.is_boosted && campaign.boost_ends_at && (

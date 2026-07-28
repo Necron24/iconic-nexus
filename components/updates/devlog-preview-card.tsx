@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bookmark, MessageCircle, Sparkles } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { PlatformBadges, StageBadge } from "@/components/project-meta";
 import {
   DEFAULT_DEVLOG_STYLE,
   devlogBackground,
@@ -81,7 +82,7 @@ export function DevlogPreviewCard({ update }: { update: DevlogPreview }) {
           ) : (
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-lime font-black text-ink">{update.project.name.charAt(0)}</span>
           )}
-          <span className="min-w-0"><strong className="block truncate hover:text-cyan">{update.project.name}</strong><span className="text-xs text-soft">{update.project.platform} · {update.project.stage}</span></span>
+          <span className="min-w-0"><strong className="block truncate hover:text-cyan">{update.project.name}</strong><span className="mt-1 flex flex-wrap gap-1"><PlatformBadges platform={update.project.platform} compact /><StageBadge stage={update.project.stage} compact /></span></span>
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <span className="badge gap-1.5"><Sparkles size={13} /> {update.reaction_count}</span>

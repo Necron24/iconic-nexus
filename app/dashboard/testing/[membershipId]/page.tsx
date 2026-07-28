@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Clock3, ExternalLink, Scale } from "lucide
 import { createClient } from "@/lib/supabase/server";
 import { FeedbackForm } from "@/components/feedback-form";
 import { TestSessionForm } from "@/components/test-session-form";
+import { PlatformBadges } from "@/components/project-meta";
 import { logTestSession, openFeedbackDispute, submitFeedback } from "@/app/dashboard/testing/actions";
 
 export default async function TestingWorkspace({ params, searchParams }: { params: Promise<{ membershipId: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
@@ -35,7 +36,7 @@ export default async function TestingWorkspace({ params, searchParams }: { param
 
   return <div>
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div><p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Testing workspace</p><h2 className="mt-2 text-3xl font-black">{campaign.title}</h2><p className="mt-2 text-soft">{project.name} · {project.platform}</p></div>
+      <div><p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Testing workspace</p><h2 className="mt-2 text-3xl font-black">{campaign.title}</h2><p className="mt-2 font-semibold text-white">{project.name}</p><div className="mt-2"><PlatformBadges platform={project.platform} compact /></div></div>
       {project.testing_url && <a href={project.testing_url} target="_blank" rel="noreferrer" className="btn-primary gap-2">Open test link <ExternalLink size={17}/></a>}
     </div>
 

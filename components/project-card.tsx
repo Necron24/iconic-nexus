@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
 type Project = {
   id: string;
@@ -49,8 +50,8 @@ export function ProjectCard({
   const hasActiveCampaign = activeCampaignCount > 0 && Boolean(project.active_campaign_id);
 
   const ownerBadge = isOwnProject ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-lime/40 bg-lime/15 px-3 py-1.5 text-xs font-black text-lime shadow-lg backdrop-blur-md">
-      <UserRound size={13} />
+    <span className="inline-flex items-center gap-1 rounded-full border border-lime/40 bg-[#102218]/90 px-2.5 py-1 text-[11px] font-black text-lime shadow-lg backdrop-blur-md">
+      <UserRound size={12} />
       My Project
     </span>
   ) : project.owner_username ? (
@@ -88,7 +89,7 @@ export function ProjectCard({
   return (
     <article className="card relative overflow-hidden">
       <AnalyticsTracker eventType="impression" targetType="project" targetId={project.id} />
-      <div className="relative grid h-40 place-items-center overflow-hidden bg-white/5">
+      <div className="relative grid h-44 place-items-center overflow-hidden bg-white/5">
         {project.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={project.cover_url} alt="" className="h-full w-full object-cover" />
@@ -131,33 +132,33 @@ export function ProjectCard({
               {project.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="min-w-0">
-            <h3 className="truncate text-xl font-black">{project.name}</h3>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="badge">{project.type}</span>
-              <span className="badge">{project.platform}</span>
-              <span className="badge">{project.stage}</span>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-2xl font-black">{project.name}</h3>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <ProjectTypeBadge type={project.type} compact />
+              <PlatformBadges platform={project.platform} compact />
+              <StageBadge stage={project.stage} compact />
             </div>
           </div>
         </div>
 
-        <p className="mb-4 min-h-12 text-sm leading-6 text-soft">
+        <p className="mb-5 min-h-12 text-sm leading-6 text-white/65">
           {project.short_description}
         </p>
 
-        <div className="mb-5 flex flex-wrap gap-3 text-xs text-soft">
-          <span className="flex items-center gap-1.5">
-            <FlaskConical size={14} /> {activeCampaignCount} active
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Users size={14} /> {project.approved_test_count ?? 0} tests
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Star size={14} />
-            {project.average_rating
-              ? Number(project.average_rating).toFixed(1)
-              : "New"}
-          </span>
+        <div className="mb-5 grid grid-cols-3 gap-2">
+          <div className={`rounded-xl border p-2.5 ${hasActiveCampaign ? "border-cyan/25 bg-cyan/[0.07]" : "border-white/10 bg-white/[0.03]"}`}>
+            <FlaskConical className={hasActiveCampaign ? "text-cyan" : "text-soft"} size={15} />
+            <p className="mt-1 text-lg font-black">{activeCampaignCount}</p><p className="text-[10px] uppercase tracking-wide text-soft">Active</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+            <Users className="text-lime" size={15} />
+            <p className="mt-1 text-lg font-black">{project.approved_test_count ?? 0}</p><p className="text-[10px] uppercase tracking-wide text-soft">Tests</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+            <Star className="text-amber-300" size={15} />
+            <p className="mt-1 text-lg font-black">{project.average_rating ? Number(project.average_rating).toFixed(1) : "New"}</p><p className="text-[10px] uppercase tracking-wide text-soft">Rating</p>
+          </div>
         </div>
 
         <div className="flex gap-2">

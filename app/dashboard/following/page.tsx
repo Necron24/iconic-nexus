@@ -4,6 +4,7 @@ import { Bell, FolderKanban, UserRound, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FollowButton } from "@/components/follow-button";
 import { toggleCampaignWatch, toggleCreatorFollow, toggleProjectFollow } from "@/app/following/actions";
+import { CampaignStatusBadge, PlatformBadges, StageBadge } from "@/components/project-meta";
 
 export default async function FollowingPage() {
   const supabase = await createClient();
@@ -67,7 +68,7 @@ export default async function FollowingPage() {
           {projectRows.map((row: any) => {
             const project = Array.isArray(row.projects) ? row.projects[0] : row.projects;
             if (!project) return null;
-            return <article key={project.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><Link href={`/projects/${project.slug}`} className="flex min-w-0 items-center gap-3">{project.icon_url ? <img src={project.icon_url} alt="" className="h-12 w-12 rounded-xl object-cover" /> : <span className="grid h-12 w-12 place-items-center rounded-xl bg-cyan font-black text-ink">{project.name.charAt(0)}</span>}<span className="min-w-0"><span className="block truncate font-black">{project.name}</span><span className="block truncate text-sm text-soft">{project.platform} · {project.stage}</span></span></Link><FollowButton action={toggleProjectFollow.bind(null, project.id, "/dashboard/following")} following kind="project" /></article>;
+            return <article key={project.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><Link href={`/projects/${project.slug}`} className="flex min-w-0 items-center gap-3">{project.icon_url ? <img src={project.icon_url} alt="" className="h-12 w-12 rounded-xl object-cover" /> : <span className="grid h-12 w-12 place-items-center rounded-xl bg-cyan font-black text-ink">{project.name.charAt(0)}</span>}<span className="min-w-0"><span className="block truncate font-black">{project.name}</span><span className="mt-1 flex flex-wrap gap-1"><PlatformBadges platform={project.platform} compact /><StageBadge stage={project.stage} compact /></span></span></Link><FollowButton action={toggleProjectFollow.bind(null, project.id, "/dashboard/following")} following kind="project" /></article>;
           })}
         </div>
       </section>}
@@ -79,7 +80,7 @@ export default async function FollowingPage() {
             const campaign = Array.isArray(row.testing_campaigns) ? row.testing_campaigns[0] : row.testing_campaigns;
             const project = campaign ? (Array.isArray(campaign.projects) ? campaign.projects[0] : campaign.projects) : null;
             if (!campaign) return null;
-            return <article key={campaign.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><Link href={`/campaigns/${campaign.id}`} className="min-w-0"><span className="block truncate font-black">{campaign.title}</span><span className="mt-1 block truncate text-sm text-soft">{project?.name ?? "Project"} · {campaign.status.replaceAll("_", " ")} · {campaign.reward_credits} credits</span></Link><FollowButton action={toggleCampaignWatch.bind(null, campaign.id, "/dashboard/following")} following kind="campaign" /></article>;
+            return <article key={campaign.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><Link href={`/campaigns/${campaign.id}`} className="min-w-0"><span className="block truncate font-black">{campaign.title}</span><span className="mt-1 block truncate text-sm text-soft">{project?.name ?? "Project"} · {campaign.reward_credits} credits</span><span className="mt-2 flex"><CampaignStatusBadge status={campaign.status} /></span></Link><FollowButton action={toggleCampaignWatch.bind(null, campaign.id, "/dashboard/following")} following kind="campaign" /></article>;
           })}
         </div>
       </section>}

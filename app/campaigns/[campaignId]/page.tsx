@@ -25,6 +25,7 @@ import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { FollowButton } from "@/components/follow-button";
 import { toggleCampaignWatch, toggleProjectFollow } from "@/app/following/actions";
+import { CampaignStatusBadge, PlatformBadges, StageBadge } from "@/components/project-meta";
 
 function formatDate(value: string | null) {
   if (!value) return "Not set";
@@ -198,9 +199,9 @@ export default async function CampaignPage({
 
               <div>
                 <div className="mb-2 flex flex-wrap gap-2">
-                  <span className="badge">{project.platform}</span>
-                  <span className="badge">{project.stage}</span>
-                  <span className="badge">{campaign.status}</span>
+                  <PlatformBadges platform={project.platform} />
+                  <StageBadge stage={project.stage} />
+                  <CampaignStatusBadge status={campaign.status} />
                   {campaign.is_private && <span className="badge border-cyan/30 bg-cyan/10 text-cyan"><LockKeyhole size={13} className="mr-1"/> Private</span>}
                   {owner && (
                     <span className="badge border-lime/30 bg-lime/10 text-lime">

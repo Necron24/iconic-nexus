@@ -4,6 +4,7 @@ import { Archive, BarChart3, FolderKanban, Newspaper, Search, TestTube2 } from "
 import { createClient } from "@/lib/supabase/server";
 import { ContentManagementActions } from "@/components/content-management-actions";
 import { archiveContent, deleteContent, restoreContent, type ManagedContentType } from "./actions";
+import { CampaignStatusBadge, PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
 type ContentRow = {
   id: string;
@@ -15,6 +16,9 @@ type ContentRow = {
   archivedAt: string | null;
   viewHref: string;
   editHref: string;
+  platform: string;
+  stage: string;
+  projectType?: string;
 };
 
 const typeOptions = ["all", "project", "devlog", "campaign"] as const;
@@ -38,13 +42,13 @@ export default async function ContentManagerPage({
 
   const [{ data: projects }, { data: devlogs }, { data: campaigns }] = await Promise.all([
     supabase.from("projects")
-      .select("id,name,slug,type,stage,is_published,created_at,archived_at")
+      .select("id,name,slug,type,stage,platform,is_published,created_at,archived_at")
       .eq("owner_id", user.id),
     supabase.from("project_updates")
-      .select("id,project_id,title,update_type,is_published,created_at,archived_at,projects!inner(id,name,owner_id)")
+      .select("id,project_id,title,update_type,is_published,created_at,archived_at,projects!inner(id,name,owner_id,platform,stage,type)")
       .eq("projects.owner_id", user.id),
     supabase.from("testing_campaigns")
-      .select("id,project_id,title,status,is_private,created_at,archived_at,projects!inner(id,name,owner_id)")
+      .select("id,project_id,title,status,is_private,created_at,archived_at,projects!inner(id,name,owner_id,platform,stage,type)")
       .eq("projects.owner_id", user.id)
   ]);
 
@@ -58,7 +62,10 @@ export default async function ContentManagerPage({
       createdAt: project.created_at,
       archivedAt: project.archived_at,
       viewHref: `/projects/${project.slug}`,
-      editHref: `/dashboard/projects/${project.id}/edit`
+      editHref: `/dashboard/projects/${project.id}/edit`,
+      platform: project.platform,
+      stage: project.stage,
+      projectType: project.type
     })),
     ...(devlogs ?? []).map((devlog) => {
       const project = Array.isArray(devlog.projects) ? devlog.projects[0] : devlog.projects;
@@ -71,7 +78,10 @@ export default async function ContentManagerPage({
         createdAt: devlog.created_at,
         archivedAt: devlog.archived_at,
         viewHref: `/devlogs/${devlog.id}`,
-        editHref: `/dashboard/projects/${devlog.project_id}/updates/${devlog.id}/edit`
+        editHref: `/dashboard/projects/${devlog.project_id}/updates/${devlog.id}/edit`,
+        platform: project?.platform ?? "Other",
+        stage: project?.stage ?? "prototype",
+        projectType: project?.type
       };
     }),
     ...(campaigns ?? []).map((campaign) => {
@@ -85,7 +95,10 @@ export default async function ContentManagerPage({
         createdAt: campaign.created_at,
         archivedAt: campaign.archived_at,
         viewHref: `/campaigns/${campaign.id}`,
-        editHref: `/dashboard/projects/${campaign.project_id}/campaigns/${campaign.id}/manage`
+        editHref: `/dashboard/projects/${campaign.project_id}/campaigns/${campaign.id}/manage`,
+        platform: project?.platform ?? "Other",
+        stage: project?.stage ?? "prototype",
+        projectType: project?.type
       };
     })
   ];
@@ -164,7 +177,7 @@ export default async function ContentManagerPage({
                   <div className="flex min-w-0 gap-4">
                     <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan/10 text-cyan"><Icon size={20} /></div>
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2"><span className="badge capitalize">{row.type}</span><span className="badge capitalize">{row.status}</span>{row.archivedAt && <span className="badge border-amber-300/30 bg-amber-300/10 text-amber-100">Archived</span>}</div>
+                      <div className="flex flex-wrap items-center gap-1.5">{row.projectType && <ProjectTypeBadge type={row.projectType} compact />}<PlatformBadges platform={row.platform} compact /><StageBadge stage={row.stage} compact />{row.type === "campaign" ? <CampaignStatusBadge status={row.status} /> : <span className="badge capitalize">{row.type} · {row.status}</span>}{row.archivedAt && <span className="badge border-amber-300/30 bg-amber-300/10 text-amber-100">Archived</span>}</div>
                       <h3 className="mt-2 truncate text-lg font-black">{row.title}</h3>
                       <p className="mt-1 text-sm text-soft">{row.subtitle} · Created {new Date(row.createdAt).toLocaleDateString("en-ZA")}</p>
                     </div>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ShareButton } from "@/components/share-button";
+import { CampaignStatusBadge, PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
 export default async function DashboardProjectsPage({
   searchParams
@@ -97,9 +98,9 @@ export default async function DashboardProjectsPage({
 
                     <div>
                       <div className="mb-2 flex flex-wrap gap-2">
-                        <span className="badge">{project.type}</span>
-                        <span className="badge">{project.platform}</span>
-                        <span className="badge">{project.stage}</span>
+                        <ProjectTypeBadge type={project.type} compact />
+                        <PlatformBadges platform={project.platform} compact />
+                        <StageBadge stage={project.stage} compact />
 
                         <span
                           className={
@@ -189,10 +190,10 @@ export default async function DashboardProjectsPage({
                                 </span>
                               </div>
                               <p className="mt-1 text-xs text-soft">
-                                Status: {campaign.status}
+                                <CampaignStatusBadge status={campaign.status} />
                                 {submitted > 0
-                                  ? ` · ${submitted} awaiting review`
-                                  : ""}
+                                  ? <span className="ml-2 text-amber-200">{submitted} awaiting review</span>
+                                  : null}
                               </p>
                               {campaign.is_private && (
                                 <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-cyan/90">

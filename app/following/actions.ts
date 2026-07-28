@@ -33,7 +33,7 @@ async function trackFollow(
 }
 
 function refresh(returnPath: string) {
-  revalidatePath(returnPath);
+  if (returnPath.startsWith("/dashboard/following")) revalidatePath(returnPath);
   revalidatePath("/dashboard/following");
   revalidatePath("/dashboard");
   revalidatePath("/discover");
@@ -54,7 +54,7 @@ export async function toggleCreatorFollow(creatorId: string, returnPath: string)
   if (error) redirect(`${next}${next.includes("?") ? "&" : "?"}error=${encodeURIComponent(error.message)}`);
   if (!existing) await trackFollow(supabase, "profile", creatorId);
   refresh(next);
-  redirect(next);
+  return { following: !existing };
 }
 
 export async function toggleProjectFollow(projectId: string, returnPath: string) {
@@ -70,7 +70,7 @@ export async function toggleProjectFollow(projectId: string, returnPath: string)
   if (error) redirect(`${next}${next.includes("?") ? "&" : "?"}error=${encodeURIComponent(error.message)}`);
   if (!existing) await trackFollow(supabase, "project", projectId);
   refresh(next);
-  redirect(next);
+  return { following: !existing };
 }
 
 export async function toggleCampaignWatch(campaignId: string, returnPath: string) {
@@ -88,5 +88,5 @@ export async function toggleCampaignWatch(campaignId: string, returnPath: string
   if (error) redirect(`${next}${next.includes("?") ? "&" : "?"}error=${encodeURIComponent(error.message)}`);
   if (!existing) await trackFollow(supabase, "campaign", campaignId);
   refresh(next);
-  redirect(next);
+  return { following: !existing };
 }

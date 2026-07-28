@@ -41,8 +41,12 @@ export type CreatorAnalytics = {
     icon_url: string | null;
     impressions: number;
     views: number;
+    unique_visitors: number;
+    link_clicks: number;
+    shares: number;
     engagements: number;
     conversions: number;
+    archived_at: string | null;
   }>;
   devlogs: Array<{
     id: string;
@@ -51,8 +55,34 @@ export type CreatorAnalytics = {
     project_name: string;
     impressions: number;
     views: number;
+    unique_visitors: number;
+    link_clicks: number;
+    shares: number;
     engagements: number;
+    archived_at: string | null;
   }>;
+  campaigns: Array<{
+    id: string;
+    title: string;
+    status: string;
+    is_private: boolean;
+    project_id: string;
+    project_name: string;
+    impressions: number;
+    views: number;
+    unique_visitors: number;
+    link_clicks: number;
+    shares: number;
+    joins: number;
+    archived_at: string | null;
+  }>;
+  profile: {
+    impressions: number;
+    views: number;
+    unique_visitors: number;
+    link_clicks: number;
+    shares: number;
+  };
   sources: Array<{ source: string; events: number }>;
   funnel: {
     impressions: number;
@@ -146,7 +176,18 @@ export function CreatorAnalyticsDashboard({
         </nav>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <nav className="flex snap-x gap-2 overflow-x-auto pb-1 [scrollbar-width:none]" aria-label="Analytics sections">
+        {[
+          ["#overview-analytics", "Overview"],
+          ["#profile-analytics", "Profile"],
+          ["#project-analytics", "Projects"],
+          ["#devlog-analytics", "Devlogs"],
+          ["#campaign-analytics", "Campaigns"],
+          ["#traffic-analytics", "Traffic"]
+        ].map(([href, label]) => <a key={href} href={href} className="badge shrink-0 px-4 py-2 hover:border-cyan/40 hover:text-cyan">{label}</a>)}
+      </nav>
+
+      <div id="overview-analytics" className="scroll-mt-28 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {metrics.map(([Icon, label, value, helper]) => (
           <article key={label} className="card p-5">
             <Icon className="text-cyan" size={21} />
@@ -198,31 +239,66 @@ export function CreatorAnalyticsDashboard({
         </section>
       </div>
 
+      <section id="profile-analytics" className="card scroll-mt-28 p-5 md:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-xl font-black">Public profile performance</h3>
+            <p className="mt-1 text-sm text-soft">How your creator page introduces people to your work.</p>
+          </div>
+          <Link href="/dashboard/profile" className="btn-secondary !px-4 !py-2">Edit profile</Link>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            ["Impressions", analytics.profile.impressions],
+            ["Profile views", analytics.profile.views],
+            ["Unique visitors", analytics.profile.unique_visitors],
+            ["External clicks", analytics.profile.link_clicks],
+            ["Shares", analytics.profile.shares]
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-xl bg-white/[0.04] p-4">
+              <p className="text-xs text-soft">{label}</p>
+              <p className="mt-2 text-2xl font-black">{number(value).toLocaleString("en-ZA")}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="grid gap-6 xl:grid-cols-2">
-        <section className="card overflow-hidden">
+        <section id="project-analytics" className="card scroll-mt-28 overflow-hidden">
           <div className="p-5 md:p-6"><h3 className="text-xl font-black">Top projects</h3><p className="mt-1 text-sm text-soft">Ranked by views in this period.</p></div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="border-y border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-soft"><tr><th className="px-5 py-3">Project</th><th className="px-3 py-3">Impressions</th><th className="px-3 py-3">Views</th><th className="px-3 py-3">Engagements</th><th className="px-5 py-3">Joins</th></tr></thead>
-              <tbody>{analytics.projects.map((project) => <tr key={project.id} className="border-b border-white/[0.06]"><td className="px-5 py-4"><Link href={`/projects/${project.slug}`} className="font-bold hover:text-cyan">{project.name}</Link></td><td className="px-3 py-4">{number(project.impressions)}</td><td className="px-3 py-4">{number(project.views)}</td><td className="px-3 py-4">{number(project.engagements)}</td><td className="px-5 py-4">{number(project.conversions)}</td></tr>)}</tbody>
+              <thead className="border-y border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-soft"><tr><th className="px-5 py-3">Project</th><th className="px-3 py-3">Impressions</th><th className="px-3 py-3">Views</th><th className="px-3 py-3">Visitors</th><th className="px-3 py-3">Clicks</th><th className="px-3 py-3">Engagements</th><th className="px-5 py-3">Joins</th></tr></thead>
+              <tbody>{analytics.projects.map((project) => <tr key={project.id} className="border-b border-white/[0.06]"><td className="px-5 py-4"><Link href={`/projects/${project.slug}`} className="font-bold hover:text-cyan">{project.name}</Link>{project.archived_at && <p className="mt-1 text-xs text-amber-200">Archived</p>}</td><td className="px-3 py-4">{number(project.impressions)}</td><td className="px-3 py-4">{number(project.views)}</td><td className="px-3 py-4">{number(project.unique_visitors)}</td><td className="px-3 py-4">{number(project.link_clicks)}</td><td className="px-3 py-4">{number(project.engagements)}</td><td className="px-5 py-4">{number(project.conversions)}</td></tr>)}</tbody>
             </table>
             {analytics.projects.length === 0 && <p className="p-6 text-center text-soft">Create and publish a project to start collecting analytics.</p>}
           </div>
         </section>
 
-        <section className="card overflow-hidden">
+        <section id="devlog-analytics" className="card scroll-mt-28 overflow-hidden">
           <div className="p-5 md:p-6"><h3 className="text-xl font-black">Top devlogs</h3><p className="mt-1 text-sm text-soft">See which updates attract attention and engagement.</p></div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] text-left text-sm">
-              <thead className="border-y border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-soft"><tr><th className="px-5 py-3">Devlog</th><th className="px-3 py-3">Impressions</th><th className="px-3 py-3">Views</th><th className="px-5 py-3">Engagements</th></tr></thead>
-              <tbody>{analytics.devlogs.map((devlog) => <tr key={devlog.id} className="border-b border-white/[0.06]"><td className="px-5 py-4"><Link href={`/devlogs/${devlog.id}`} className="font-bold hover:text-cyan">{devlog.title}</Link><p className="mt-1 text-xs text-soft">{devlog.project_name}</p></td><td className="px-3 py-4">{number(devlog.impressions)}</td><td className="px-3 py-4">{number(devlog.views)}</td><td className="px-5 py-4">{number(devlog.engagements)}</td></tr>)}</tbody>
+              <thead className="border-y border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-soft"><tr><th className="px-5 py-3">Devlog</th><th className="px-3 py-3">Impressions</th><th className="px-3 py-3">Views</th><th className="px-3 py-3">Visitors</th><th className="px-3 py-3">Clicks</th><th className="px-3 py-3">Shares</th><th className="px-5 py-3">Engagements</th></tr></thead>
+              <tbody>{analytics.devlogs.map((devlog) => <tr key={devlog.id} className="border-b border-white/[0.06]"><td className="px-5 py-4"><Link href={`/devlogs/${devlog.id}`} className="font-bold hover:text-cyan">{devlog.title}</Link><p className="mt-1 text-xs text-soft">{devlog.project_name}{devlog.archived_at ? " · Archived" : ""}</p></td><td className="px-3 py-4">{number(devlog.impressions)}</td><td className="px-3 py-4">{number(devlog.views)}</td><td className="px-3 py-4">{number(devlog.unique_visitors)}</td><td className="px-3 py-4">{number(devlog.link_clicks)}</td><td className="px-3 py-4">{number(devlog.shares)}</td><td className="px-5 py-4">{number(devlog.engagements)}</td></tr>)}</tbody>
             </table>
             {analytics.devlogs.length === 0 && <p className="p-6 text-center text-soft">Publish a devlog to see content-level performance.</p>}
           </div>
         </section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
+      <section id="campaign-analytics" className="card scroll-mt-28 overflow-hidden">
+        <div className="p-5 md:p-6"><h3 className="text-xl font-black">Campaign performance</h3><p className="mt-1 text-sm text-soft">Compare discovery, interest and tester conversion for every campaign.</p></div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-left text-sm">
+            <thead className="border-y border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-soft"><tr><th className="px-5 py-3">Campaign</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Impressions</th><th className="px-3 py-3">Views</th><th className="px-3 py-3">Visitors</th><th className="px-3 py-3">Clicks</th><th className="px-3 py-3">Shares</th><th className="px-5 py-3">Joins / conversion</th></tr></thead>
+            <tbody>{analytics.campaigns.map((campaign) => <tr key={campaign.id} className="border-b border-white/[0.06]"><td className="px-5 py-4"><Link href={`/campaigns/${campaign.id}`} className="font-bold hover:text-cyan">{campaign.title}</Link><p className="mt-1 text-xs text-soft">{campaign.project_name}{campaign.archived_at ? " · Archived" : ""}</p></td><td className="px-3 py-4 capitalize">{campaign.status}</td><td className="px-3 py-4">{number(campaign.impressions)}</td><td className="px-3 py-4">{number(campaign.views)}</td><td className="px-3 py-4">{number(campaign.unique_visitors)}</td><td className="px-3 py-4">{number(campaign.link_clicks)}</td><td className="px-3 py-4">{number(campaign.shares)}</td><td className="px-5 py-4">{number(campaign.joins)} <span className="text-soft">· {percentage(number(campaign.joins), number(campaign.views)).toFixed(1)}%</span></td></tr>)}</tbody>
+          </table>
+          {analytics.campaigns.length === 0 && <p className="p-6 text-center text-soft">Create a testing campaign to see conversion analytics.</p>}
+        </div>
+      </section>
+
+      <div id="traffic-analytics" className="scroll-mt-28 grid gap-6 lg:grid-cols-[1fr_1.3fr]">
         <section className="card p-5 md:p-6">
           <h3 className="text-xl font-black">Traffic sources</h3>
           <div className="mt-5 space-y-3">

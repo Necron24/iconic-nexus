@@ -17,6 +17,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     .from("projects")
     .select("id, owner_id, name, slug, type, stage, platform, genre, short_description, description, icon_url, cover_url, testing_url, known_issues, is_published, project_images(image_url, sort_order)")
     .eq("slug", projectId)
+    .is("archived_at", null)
     .maybeSingle();
 
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
@@ -27,6 +28,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
     .eq("project_id", project.id)
     .eq("is_published", true)
+    .is("archived_at", null)
     .order("created_at", { ascending: false })
     .limit(20);
 

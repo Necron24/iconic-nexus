@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectCard } from "@/components/project-card";
 import { ShareButton } from "@/components/share-button";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { TrackedLink } from "@/components/tracked-link";
 
 const accentMap: Record<string, string> = {
   lime: '#9EFF3A',
@@ -38,6 +40,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       .select('id,slug,name,type,platform,stage,short_description,icon_url,cover_url')
       .eq('owner_id', p.id)
       .eq('is_published', true)
+      .is('archived_at', null)
       .order('created_at', { ascending: false }),
     supabase
       .from('campaign_members')
@@ -59,7 +62,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const shellClass = p.profile_theme === 'glass' ? 'bg-white/[0.07] backdrop-blur-xl' : p.profile_theme === 'dark_pro' ? 'bg-black/50' : p.profile_theme === 'minimal' ? 'bg-[#0c1323]' : 'bg-white/[0.04]';
 
   return (
-    <section className="container-page py-14" style={style}>
+    <section className="container-page relative py-14" style={style}>
+      <AnalyticsTracker eventType="view" targetType="profile" targetId={p.id} />
       <div
         className={`mx-auto max-w-5xl overflow-hidden border transition-all ${shellClass} ${p.profile_card_style === 'compact' ? 'rounded-2xl' : 'rounded-3xl'}`}
         style={{ borderColor: p.profile_card_style === 'borderless' ? 'transparent' : `${accent}66`, boxShadow: p.profile_theme === 'neon' ? `0 0 60px ${accent}35` : `0 0 0 1px ${accent}22, 0 0 50px ${accent}16` }}
@@ -95,21 +99,21 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
 
             <div className="flex flex-wrap gap-2 pb-2">
-              <ShareButton title={`${p.display_name || p.username} on Iconic Nexus`} text={p.headline || p.bio || undefined} path={`/profiles/${p.username}`} />
+              <ShareButton title={`${p.display_name || p.username} on Iconic Nexus`} text={p.headline || p.bio || undefined} path={`/profiles/${p.username}`} analyticsTargetType="profile" analyticsTargetId={p.id} />
               {p.show_website !== false && p.website_url && (
-                <a href={p.website_url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bold text-ink transition hover:scale-[1.02]" style={accentButton}>
+                <TrackedLink href={p.website_url} target="_blank" rel="noreferrer" targetType="profile" targetId={p.id} className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bold text-ink transition hover:scale-[1.02]" style={accentButton}>
                   <Globe2 size={16} /> Website
-                </a>
+                </TrackedLink>
               )}
               {p.show_github !== false && p.github_url && (
-                <a href={p.github_url} target="_blank" rel="noreferrer" className="btn-secondary gap-2" style={{ borderColor: `${accent}66` }}>
+                <TrackedLink href={p.github_url} target="_blank" rel="noreferrer" targetType="profile" targetId={p.id} className="btn-secondary gap-2" style={{ borderColor: `${accent}66` }}>
                   <Github size={16} /> GitHub
-                </a>
+                </TrackedLink>
               )}
               {p.show_social !== false && p.social_url && (
-                <a href={p.social_url} target="_blank" rel="noreferrer" className="btn-secondary gap-2" style={{ borderColor: `${accent}66` }}>
+                <TrackedLink href={p.social_url} target="_blank" rel="noreferrer" targetType="profile" targetId={p.id} className="btn-secondary gap-2" style={{ borderColor: `${accent}66` }}>
                   Social <ExternalLink size={16} />
-                </a>
+                </TrackedLink>
               )}
             </div>
           </div>

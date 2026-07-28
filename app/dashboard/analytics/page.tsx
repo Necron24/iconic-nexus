@@ -23,6 +23,14 @@ const EMPTY_ANALYTICS: CreatorAnalytics = {
   series: [],
   projects: [],
   devlogs: [],
+  campaigns: [],
+  profile: {
+    impressions: 0,
+    views: 0,
+    unique_visitors: 0,
+    link_clicks: 0,
+    shares: 0
+  },
   sources: [],
   funnel: { impressions: 0, views: 0, link_clicks: 0, campaign_joins: 0 }
 };

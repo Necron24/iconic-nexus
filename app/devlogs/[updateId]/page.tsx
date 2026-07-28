@@ -87,6 +87,8 @@ export default async function DevlogDetailPage({
     .from("project_updates")
     .select("id,project_id,author_id,title,body,version_label,update_type,image_url,release_url,is_published,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit,projects!inner(id,slug,name,icon_url,platform,stage,owner_id,short_description)")
     .eq("id", updateId)
+    .is("archived_at", null)
+    .is("projects.archived_at", null)
     .maybeSingle();
 
   if (!update || (!update.is_published && update.author_id !== user?.id)) notFound();

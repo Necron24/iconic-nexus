@@ -76,7 +76,9 @@ export default async function DevlogsPage({
       "id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit,projects!inner(slug,name,icon_url,platform,stage)",
       { count: "exact" }
     )
-    .eq("is_published", true);
+    .eq("is_published", true)
+    .is("archived_at", null)
+    .is("projects.archived_at", null);
 
   if (type) query = query.eq("update_type", type);
   if (search) {

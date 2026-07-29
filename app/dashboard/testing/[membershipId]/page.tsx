@@ -25,7 +25,7 @@ export default async function TestingWorkspace({ params, searchParams }: { param
 
   const [{ data: sessions }, { data: report }, { data: dispute }] = await Promise.all([
     supabase.from("test_sessions").select("id,minutes_tested,device_name,os_version,notes,created_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }),
-    supabase.from("feedback_reports").select("id,overall_rating,developer_helpful,review_note,reviewed_at,review_due_at").eq("campaign_member_id", membershipId).maybeSingle(),
+    supabase.from("feedback_reports").select("id,installation_success,crash_found,severity,performance_rating,stability_rating,usability_rating,overall_rating,what_worked,what_was_confusing,bug_details,developer_helpful,review_note,reviewed_at,review_due_at").eq("campaign_member_id", membershipId).maybeSingle(),
     supabase.from("feedback_disputes").select("id,status,reason,resolution_note,created_at,resolved_at").eq("campaign_member_id", membershipId).order("created_at", { ascending: false }).limit(1).maybeSingle()
   ]);
 
@@ -70,7 +70,7 @@ export default async function TestingWorkspace({ params, searchParams }: { param
       </form>}
     </div>}
 
-    {!locked && <div className="space-y-6"><TestSessionForm action={logTestSession.bind(null,membershipId)} /><FeedbackForm action={submitFeedback.bind(null,membershipId)} totalMinutes={total} minimumMinutes={campaign.minimum_minutes} /></div>}
+    {!locked && <div className="space-y-6"><TestSessionForm action={logTestSession.bind(null,membershipId)} /><FeedbackForm action={submitFeedback.bind(null,membershipId)} totalMinutes={total} minimumMinutes={campaign.minimum_minutes} defaults={changesRequested ? report : null} /></div>}
 
     <div className="card mt-6 p-6">
       <h3 className="text-xl font-black">Session history</h3>

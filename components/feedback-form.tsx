@@ -9,9 +9,21 @@ type Props = {
   totalMinutes: number;
   minimumMinutes: number;
   error?: string;
+  defaults?: {
+    installation_success?: boolean | null;
+    crash_found?: boolean | null;
+    severity?: string | null;
+    performance_rating?: number | null;
+    stability_rating?: number | null;
+    usability_rating?: number | null;
+    overall_rating?: number | null;
+    what_worked?: string | null;
+    what_was_confusing?: string | null;
+    bug_details?: string | null;
+  } | null;
 };
 
-export function FeedbackForm({ action, totalMinutes, minimumMinutes, error }: Props) {
+export function FeedbackForm({ action, totalMinutes, minimumMinutes, error, defaults }: Props) {
   const ready = totalMinutes >= minimumMinutes;
   return (
     <form action={action} className="card p-6">
@@ -27,22 +39,22 @@ export function FeedbackForm({ action, totalMinutes, minimumMinutes, error }: Pr
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <label>
           <span className="label">Did installation succeed? *</span>
-          <select name="installationSuccess" className="field" required defaultValue="true"><option value="true">Yes</option><option value="false">No</option></select>
+          <select name="installationSuccess" className="field" required defaultValue={defaults?.installation_success === false ? "false" : "true"}><option value="true">Yes</option><option value="false">No</option></select>
         </label>
         <label>
           <span className="label">Did the app/game crash? *</span>
-          <select name="crashFound" className="field" required defaultValue="false"><option value="false">No</option><option value="true">Yes</option></select>
+          <select name="crashFound" className="field" required defaultValue={defaults?.crash_found ? "true" : "false"}><option value="false">No</option><option value="true">Yes</option></select>
         </label>
         <label>
           <span className="label">Bug severity *</span>
-          <select name="severity" className="field" required defaultValue="none"><option value="none">None</option><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select>
+          <select name="severity" className="field" required defaultValue={defaults?.severity ?? "none"}><option value="none">None</option><option value="minor">Minor</option><option value="major">Major</option><option value="critical">Critical</option></select>
         </label>
         {[["performanceRating","Performance"],["stabilityRating","Stability"],["usabilityRating","Ease of use"],["overallRating","Overall experience"]].map(([name,label]) => (
-          <label key={name}><span className="label">{label} *</span><select name={name} className="field" required defaultValue="5"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Very poor</option></select></label>
+          <label key={name}><span className="label">{label} *</span><select name={name} className="field" required defaultValue={String(defaults?.[name === "performanceRating" ? "performance_rating" : name === "stabilityRating" ? "stability_rating" : name === "usabilityRating" ? "usability_rating" : "overall_rating"] ?? 5)}><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Very poor</option></select></label>
         ))}
-        <label className="sm:col-span-2"><span className="label">What worked well? *</span><textarea name="whatWorked" className="field min-h-32 resize-y" maxLength={3000} required /></label>
-        <label className="sm:col-span-2"><span className="label">What was confusing or difficult? *</span><textarea name="whatWasConfusing" className="field min-h-32 resize-y" maxLength={3000} required /></label>
-        <label className="sm:col-span-2"><span className="label">Bug details</span><textarea name="bugDetails" className="field min-h-32 resize-y" maxLength={4000} placeholder="Steps to reproduce, expected result and actual result." /></label>
+        <label className="sm:col-span-2"><span className="label">What worked well? *</span><textarea name="whatWorked" className="field min-h-32 resize-y" maxLength={3000} required defaultValue={defaults?.what_worked ?? ""} /></label>
+        <label className="sm:col-span-2"><span className="label">What was confusing or difficult? *</span><textarea name="whatWasConfusing" className="field min-h-32 resize-y" maxLength={3000} required defaultValue={defaults?.what_was_confusing ?? ""} /></label>
+        <label className="sm:col-span-2"><span className="label">Bug details</span><textarea name="bugDetails" className="field min-h-32 resize-y" maxLength={4000} defaultValue={defaults?.bug_details ?? ""} placeholder="Steps to reproduce, expected result and actual result." /></label>
         <ImageUploadField
           name="attachments"
           label="Screenshots (optional)"

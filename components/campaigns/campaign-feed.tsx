@@ -165,7 +165,7 @@ export function CampaignFeed({ initialCampaigns }: { initialCampaigns: BrowseCam
             return (
               <article key={campaign.id} className={`card relative grid gap-5 p-6 md:grid-cols-[1fr_auto] md:items-center ${campaign.is_boosted ? "border-lime/40 bg-lime/[0.04]" : ""}`}>
                 <AnalyticsTracker eventType="impression" targetType="campaign" targetId={campaign.id} />
-                <div className="flex gap-4">
+                <div className="min-w-0 flex gap-4">
                   {campaign.icon_url ? <img src={campaign.icon_url} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-lime text-2xl font-black text-ink">{campaign.project_name.charAt(0).toUpperCase()}</div>}
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-wrap gap-2">

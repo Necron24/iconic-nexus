@@ -37,7 +37,10 @@ export default async function ManageCampaignPage({
 
   const update = updateCampaign.bind(null, projectId, campaignId);
   const statusAction = changeCampaignStatus.bind(null, projectId, campaignId);
-  const totalBudget = Number(campaign.reserved_credits ?? 0) + Number(campaign.spent_credits ?? 0);
+  const totalBudget = Math.max(
+    Number(campaign.reserved_credits ?? 0) + Number(campaign.spent_credits ?? 0),
+    Number(campaign.tester_goal ?? 0) * Number(campaign.reward_credits ?? 0)
+  );
 
   return (
     <div>

@@ -124,7 +124,15 @@ export function ProjectForm({ action, submitLabel, cancelHref, defaults = {} }: 
 
         <label>
           <span className="label">Platform *</span>
-          <input name="platform" className="field" maxLength={60} required defaultValue={defaults.platform ?? ""} placeholder="Android, Web, Windows..." />
+          <input name="platform" list="project-platform-options" className="field" maxLength={60} required defaultValue={defaults.platform ?? ""} placeholder="Android, Web, Windows..." />
+          <datalist id="project-platform-options">
+            <option value="Android" />
+            <option value="Web" />
+            <option value="Windows" />
+            <option value="iOS" />
+            <option value="macOS" />
+            <option value="Linux" />
+          </datalist>
         </label>
 
         <label>

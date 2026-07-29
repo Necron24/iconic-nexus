@@ -64,6 +64,7 @@ function getFields(formData: FormData, path: string) {
 
   if (!name || !platform || !shortDescription) fail(path, "Project name, platform and short description are required.");
   if (name.length > 100) fail(path, "Project name may not exceed 100 characters.");
+  if (platform.toLocaleLowerCase() === name.toLocaleLowerCase()) fail(path, "Platform cannot be the same as the project name. Enter a platform such as Android, Web, Windows or iOS.");
   if (shortDescription.length > 220) fail(path, "Short description may not exceed 220 characters.");
   if (!validTypes.has(type)) fail(path, "Choose a valid project type.");
   if (!validStages.has(stage)) fail(path, "Choose a valid development stage.");

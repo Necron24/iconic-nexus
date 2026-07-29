@@ -14,6 +14,10 @@ type Project = {
 };
 type FameData = { testers: Person[]; developers: Person[]; projects: Project[]; monthly_projects: Project[]; monthly_testers: Person[]; community_champions: Person[] };
 
+function pluralize(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function RankBadge({ rank }: { rank: number }) {
   const style = rank === 1 ? "bg-amber-300 text-ink" : rank === 2 ? "bg-slate-300 text-ink" : rank === 3 ? "bg-orange-400 text-ink" : "bg-white/10 text-white";
   return <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black ${style}`}>{rank}</span>;
@@ -42,12 +46,12 @@ export default async function WallOfFamePage() {
       <div className="mb-8 grid gap-6 xl:grid-cols-2">
         <section className="card p-5">
           <div className="mb-5 flex items-center gap-3"><Sparkles className="text-amber-300"/><div><h2 className="text-2xl font-black">Projects of the Month</h2><p className="text-sm text-soft">This month&apos;s testing and devlog activity</p></div></div>
-          <div className="space-y-3">{fame.monthly_projects.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No qualifying activity this month yet.</p> : fame.monthly_projects.map((project) => <Link href={`/projects/${project.slug}`} key={project.id} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08]"><RankBadge rank={Number(project.rank)}/><Avatar src={project.icon_url} label={project.name}/><div className="min-w-0 flex-1"><p className="truncate font-bold">{project.name}</p><p className="text-xs text-soft">{project.monthly_tests ?? 0} tests · {project.monthly_devlogs ?? 0} devlogs this month</p><Badge>{project.badge}</Badge></div></Link>)}</div>
+          <div className="space-y-3">{fame.monthly_projects.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No qualifying activity this month yet.</p> : fame.monthly_projects.map((project) => <Link href={`/projects/${project.slug}`} key={project.id} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08]"><RankBadge rank={Number(project.rank)}/><Avatar src={project.icon_url} label={project.name}/><div className="min-w-0 flex-1"><p className="truncate font-bold">{project.name}</p><p className="text-xs text-soft">{pluralize(project.monthly_tests ?? 0, "test")} · {pluralize(project.monthly_devlogs ?? 0, "devlog")} this month</p><Badge>{project.badge}</Badge></div></Link>)}</div>
         </section>
 
         <section className="card p-5">
           <div className="mb-5 flex items-center gap-3"><Medal className="text-lime"/><div><h2 className="text-2xl font-black">Testers of the Month</h2><p className="text-sm text-soft">Fresh monthly activity gives new users a fair chance</p></div></div>
-          <div className="space-y-3">{fame.monthly_testers.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No approved tests this month yet.</p> : fame.monthly_testers.map((person) => <Link href={`/profiles/${person.username}`} key={person.id} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08]"><RankBadge rank={Number(person.rank)}/><Avatar src={person.avatar_url} label={person.display_name || person.username}/><div className="min-w-0 flex-1"><p className="truncate font-bold">{person.display_name || person.username}</p><p className="text-xs text-soft">{person.monthly_tests ?? 0} approved tests this month</p><Badge>{person.badge}</Badge></div></Link>)}</div>
+          <div className="space-y-3">{fame.monthly_testers.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-center text-soft">No approved tests this month yet.</p> : fame.monthly_testers.map((person) => <Link href={`/profiles/${person.username}`} key={person.id} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 hover:bg-white/[0.08]"><RankBadge rank={Number(person.rank)}/><Avatar src={person.avatar_url} label={person.display_name || person.username}/><div className="min-w-0 flex-1"><p className="truncate font-bold">{person.display_name || person.username}</p><p className="text-xs text-soft">{pluralize(person.monthly_tests ?? 0, "approved test")} this month</p><Badge>{person.badge}</Badge></div></Link>)}</div>
         </section>
       </div>
 

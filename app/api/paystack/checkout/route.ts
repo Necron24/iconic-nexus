@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   try {
     const reference = paystackReference("credit", String(order.order_id));
-    const result = await paystackRequest<{ authorization_url: string }>("/transaction/initialize", {
+    const result = await paystackRequest<{ access_code: string }>("/transaction/initialize", {
       method: "POST",
       body: JSON.stringify({
         email: user.email,
@@ -41,7 +41,10 @@ export async function POST(request: Request) {
         }
       })
     });
-    return NextResponse.redirect(result.authorization_url, 303);
+    return NextResponse.redirect(
+      new URL(`/dashboard/paystack-checkout?accessCode=${encodeURIComponent(result.access_code)}`, request.url),
+      303
+    );
   } catch (paymentError) {
     const message = paymentError instanceof Error ? paymentError.message : "Paystack checkout failed.";
     return NextResponse.redirect(new URL(`/dashboard/credits?error=${encodeURIComponent(message)}`, request.url), 303);

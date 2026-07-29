@@ -1,5 +1,8 @@
 begin;
 
+alter type public.credit_transaction_type
+  add value if not exists 'subscription_bonus';
+
 create table if not exists public.subscription_plans (
   code text primary key,
   name text not null,

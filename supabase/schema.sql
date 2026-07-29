@@ -6,7 +6,7 @@ create type public.project_stage as enum ('prototype', 'alpha', 'beta', 'release
 create type public.campaign_status as enum ('draft', 'active', 'paused', 'completed', 'cancelled');
 create type public.member_status as enum ('joined', 'in_progress', 'submitted', 'approved', 'rejected');
 create type public.feedback_severity as enum ('none', 'minor', 'major', 'critical');
-create type public.credit_transaction_type as enum ('welcome', 'test_reward', 'helpful_bonus', 'bug_bonus', 'campaign_cost', 'refund', 'admin_adjustment');
+create type public.credit_transaction_type as enum ('welcome', 'test_reward', 'helpful_bonus', 'bug_bonus', 'campaign_cost', 'refund', 'admin_adjustment', 'subscription_bonus');
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

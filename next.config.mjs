@@ -14,7 +14,7 @@ const contentSecurityPolicy = [
   "media-src 'self' https:",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://checkout.paystack.com",
   "frame-ancestors 'none'",
   "upgrade-insecure-requests"
 ].join("; ");

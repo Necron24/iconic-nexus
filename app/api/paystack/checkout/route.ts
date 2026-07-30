@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { paystackReference, paystackRequest } from "@/lib/paystack";
 
@@ -14,6 +15,15 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(new URL("/login", request.url), 303);
+
+  const admin = createAdminClient();
+  await admin.from("credit_purchase_orders").update({
+    status: "cancelled",
+    updated_at: new Date().toISOString()
+  })
+    .eq("profile_id", user.id)
+    .eq("status", "pending")
+    .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
   const form = await request.formData();
   const packCode = String(form.get("packCode") ?? "").trim();

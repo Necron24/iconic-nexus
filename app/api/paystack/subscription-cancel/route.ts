@@ -10,6 +10,7 @@ type PaystackSubscriptionRecord = {
   subscription_code: string;
   email_token: string;
   next_payment_date?: string | null;
+  customer?: { customer_code?: string } | number | null;
 };
 
 export async function POST(request: Request) {
@@ -36,10 +37,13 @@ export async function POST(request: Request) {
     let token = subscription.paystack_email_token || "";
 
     if ((!code || !token) && customerCode) {
-      const subscriptions = await paystackRequest<PaystackSubscriptionRecord[]>(
-        `/subscription?customer=${encodeURIComponent(customerCode)}&perPage=100`
-      );
-      const active = subscriptions.find((item) => ["active", "non-renewing", "attention"].includes(item.status));
+      const subscriptions = await paystackRequest<PaystackSubscriptionRecord[]>("/subscription?perPage=100");
+      const active = subscriptions.find((item) => {
+        const itemCustomer = typeof item.customer === "object" && item.customer
+          ? item.customer.customer_code
+          : "";
+        return itemCustomer === customerCode && ["active", "non-renewing", "attention"].includes(item.status);
+      });
       if (active) {
         code = active.subscription_code;
         token = active.email_token;

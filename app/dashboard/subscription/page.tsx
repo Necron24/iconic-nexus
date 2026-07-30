@@ -7,15 +7,34 @@ export default async function SubscriptionPage({ searchParams }: { searchParams:
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [{ data: plans }, { data: currentRows }] = await Promise.all([
+  const [{ data: plans }, { data: currentRows }, { data: subscription }] = await Promise.all([
     supabase.from("subscription_plans").select("*").eq("active", true).order("sort_order"),
-    supabase.rpc("current_plan", { p_profile_id: user.id })
+    supabase.rpc("current_plan", { p_profile_id: user.id }),
+    supabase.from("profile_subscriptions")
+      .select("plan_code,status,current_period_end,cancel_at_period_end,next_payment_date")
+      .eq("profile_id", user.id)
+      .maybeSingle()
   ]);
   const current = Array.isArray(currentRows) ? currentRows[0] : currentRows;
   return <div className="space-y-6">
     <div><p className="text-sm font-bold uppercase tracking-[.25em] text-cyan">Membership</p><h2 className="mt-2 text-3xl font-black">Choose your Iconic Nexus plan</h2><p className="mt-2 text-soft">Your current plan is <strong className="text-white">{current?.plan_name ?? "Free"}</strong>.</p></div>
     {query.error && <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">{query.error}</div>}
     {query.success && <div className="rounded-xl border border-lime/30 bg-lime/10 p-4 text-lime">{query.success}</div>}
+    {subscription?.plan_code !== "free" && <div className="card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="font-bold">Subscription status: <span className="capitalize text-lime">{subscription?.status ?? "active"}</span></p>
+          <p className="mt-1 text-sm text-soft">
+            {subscription?.cancel_at_period_end
+              ? "Cancellation is scheduled. Paystack will not charge this subscription again."
+              : `Next billing date: ${subscription?.next_payment_date ? new Date(subscription.next_payment_date).toLocaleDateString("en-ZA") : "waiting for Paystack confirmation"}`}
+          </p>
+        </div>
+        {!subscription?.cancel_at_period_end && <form action="/api/paystack/subscription-cancel" method="post">
+          <button className="btn-secondary">Cancel subscription</button>
+        </form>}
+      </div>
+    </div>}
     <div className="grid gap-5 lg:grid-cols-3">{(plans ?? []).map((plan) => {
       const active = plan.code === current?.plan_code;
       const features = [`${plan.active_campaign_limit} active campaign${plan.active_campaign_limit === 1 ? "" : "s"}`, plan.private_campaigns ? "Private testing campaigns" : "Public campaigns", `${plan.team_member_limit} team seat${plan.team_member_limit === 1 ? "" : "s"}`, plan.advanced_analytics ? "Advanced analytics" : "Basic dashboard", `${plan.monthly_bonus_credits} monthly bonus credits`];

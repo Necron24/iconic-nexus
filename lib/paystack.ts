@@ -56,5 +56,51 @@ export type PaystackTransaction = {
   metadata?: Record<string, unknown> | null;
   customer?: { customer_code?: string; email?: string };
   plan?: { plan_code?: string } | string | null;
+  subscription?: {
+    subscription_code?: string;
+    email_token?: string;
+    next_payment_date?: string;
+  } | null;
+  paid_at?: string | null;
+};
+
+export type PaystackSubscriptionEvent = {
+  subscription_code?: string;
+  email_token?: string;
+  next_payment_date?: string | null;
+  status?: string;
+  customer?: { customer_code?: string; email?: string } | string | number | null;
+  plan?: { plan_code?: string } | string | number | null;
+};
+
+export type PaystackInvoiceEvent = {
+  invoice_code?: string;
+  amount?: number;
+  period_start?: string | null;
+  period_end?: string | null;
+  status?: string;
+  paid?: boolean;
+  subscription?: PaystackSubscriptionEvent | null;
+  customer?: { customer_code?: string; email?: string } | null;
+  transaction?: {
+    reference?: string;
+    status?: string;
+    amount?: number;
+    currency?: string;
+  } | null;
+};
+
+export type PaystackRefundEvent = {
+  status?: string;
+  transaction_reference?: string;
+  refund_reference?: string | null;
+  amount?: string | number;
+  currency?: string;
+};
+
+export type PaystackDisputeEvent = {
+  id?: string | number;
+  status?: string;
+  transaction?: { reference?: string } | string | number | null;
 };
 

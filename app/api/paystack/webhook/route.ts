@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
-import { completePaystackTransaction } from "@/lib/paystack-payment";
-import { PaystackTransaction, verifyPaystackSignature } from "@/lib/paystack";
+import {
+  completePaystackRenewal,
+  completePaystackTransaction,
+  linkPaystackSubscription,
+  markPaystackSubscriptionEvent,
+  processPaystackReversal
+} from "@/lib/paystack-payment";
+import {
+  parsePaystackReference,
+  PaystackDisputeEvent,
+  PaystackInvoiceEvent,
+  PaystackRefundEvent,
+  PaystackSubscriptionEvent,
+  PaystackTransaction,
+  verifyPaystackSignature
+} from "@/lib/paystack";
 
 export const runtime = "nodejs";
 
@@ -11,9 +25,32 @@ export async function POST(request: Request) {
   }
 
   try {
-    const event = JSON.parse(body) as { event?: string; data?: PaystackTransaction };
-    if (event.event === "charge.success" && event.data) {
-      await completePaystackTransaction(event.data);
+    const event = JSON.parse(body) as { event?: string; data?: unknown };
+    if (!event.event || !event.data) return NextResponse.json({ received: true });
+
+    if (event.event === "charge.success") {
+      const transaction = event.data as PaystackTransaction;
+      if (parsePaystackReference(transaction.reference)) {
+        await completePaystackTransaction(transaction);
+      } else if (transaction.subscription?.subscription_code) {
+        await completePaystackRenewal(transaction);
+      }
+    } else if (event.event === "invoice.update") {
+      const invoice = event.data as PaystackInvoiceEvent;
+      if (invoice.paid && invoice.transaction?.status === "success") {
+        await completePaystackRenewal(invoice);
+      }
+    } else if (event.event === "subscription.create") {
+      await linkPaystackSubscription(event.data as PaystackSubscriptionEvent);
+    } else if (event.event === "invoice.payment_failed") {
+      await markPaystackSubscriptionEvent(event.event, event.data as PaystackInvoiceEvent);
+    } else if (event.event === "subscription.not_renew" || event.event === "subscription.disable") {
+      await markPaystackSubscriptionEvent(event.event, event.data as PaystackSubscriptionEvent);
+    } else if (event.event === "refund.processed" || event.event === "charge.dispute.create") {
+      await processPaystackReversal(
+        event.event,
+        event.data as PaystackRefundEvent | PaystackDisputeEvent
+      );
     }
     return NextResponse.json({ received: true });
   } catch (error) {

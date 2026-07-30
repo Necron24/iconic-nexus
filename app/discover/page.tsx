@@ -51,7 +51,12 @@ export default async function DiscoverPage() {
     (preferredPlatforms.has(project.platform) ? 10 : 0) +
     (preferredTypes.has(project.type) ? 5 : 0) +
     (Number(project.active_campaign_count) > 0 ? 3 : 0);
-  const personalisedProjects = user ? [...projects].sort((a, b) => score(b) - score(a)) : projects;
+  const personalisedProjects = user
+    ? [...projects].sort((a, b) =>
+        Number(Boolean(b.is_sponsored)) - Number(Boolean(a.is_sponsored)) ||
+        score(b) - score(a)
+      )
+    : projects;
   const personalizationSummary = user ? {
     role: profileResult.data?.role ?? "both",
     platforms: [...preferredPlatforms].slice(0, 4),

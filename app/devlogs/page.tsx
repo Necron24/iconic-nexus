@@ -45,6 +45,8 @@ type DevlogRow = {
     platform: string;
     stage: string;
   }>;
+  is_sponsored?: boolean;
+  boost_ends_at?: string | null;
 };
 
 function pageHref(page: number, search: string, type: string, sort: string) {
@@ -70,29 +72,64 @@ export default async function DevlogsPage({
   const offset = (page - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
-  let query = supabase
-    .from("project_updates")
-    .select(
-      "id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit,projects!inner(slug,name,icon_url,platform,stage)",
-      { count: "exact" }
-    )
-    .eq("is_published", true)
-    .is("archived_at", null)
-    .is("projects.archived_at", null);
+  const nowIso = new Date().toISOString();
+  const { data: boostRows } = await supabase
+    .from("content_boosts")
+    .select("target_id,ends_at")
+    .eq("target_type", "devlog")
+    .eq("status", "active")
+    .lte("starts_at", nowIso)
+    .gt("ends_at", nowIso)
+    .order("starts_at", { ascending: false });
+  const boostedIds = [...new Set((boostRows ?? []).map((row) => row.target_id))];
+  const boostEndById = new Map((boostRows ?? []).map((row) => [row.target_id, row.ends_at]));
+  const selectFields = "id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit,projects!inner(slug,name,icon_url,platform,stage)";
+  const safeSearch = search.replace(/[,%()]/g, " ").replace(/\s+/g, " ").trim();
 
-  if (type) query = query.eq("update_type", type);
-  if (search) {
-    const safeSearch = search.replace(/[,%()]/g, " ").replace(/\s+/g, " ").trim();
-    if (safeSearch) query = query.or(`title.ilike.%${safeSearch}%,body.ilike.%${safeSearch}%`);
+  const applyFilters = (query: any) => {
+    let filtered = query
+      .eq("is_published", true)
+      .is("archived_at", null)
+      .is("projects.archived_at", null);
+    if (type) filtered = filtered.eq("update_type", type);
+    if (safeSearch) filtered = filtered.or(`title.ilike.%${safeSearch}%,body.ilike.%${safeSearch}%`);
+    return filtered;
+  };
+
+  let sponsoredUpdates: DevlogRow[] = [];
+  let sponsoredError: { message: string } | null = null;
+  if (boostedIds.length > 0) {
+    const sponsoredResult = await applyFilters(
+      supabase.from("project_updates").select(selectFields).in("id", boostedIds)
+    )
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+    sponsoredError = sponsoredResult.error;
+    sponsoredUpdates = ((sponsoredResult.data ?? []) as DevlogRow[]).map((update) => ({
+      ...update,
+      is_sponsored: true,
+      boost_ends_at: boostEndById.get(update.id) ?? null
+    }));
   }
 
-  const { data, count, error } = await query
-    .order("published_at", { ascending: sort === "oldest", nullsFirst: false })
-    .order("created_at", { ascending: sort === "oldest" })
-    .range(offset, offset + PAGE_SIZE - 1);
+  const sponsoredCount = sponsoredUpdates.length;
+  const pageSponsored = sponsoredUpdates.slice(offset, offset + PAGE_SIZE);
+  const normalSlots = PAGE_SIZE - pageSponsored.length;
+  const normalOffset = Math.max(0, offset - sponsoredCount);
+  let normalQuery = applyFilters(
+    supabase.from("project_updates").select(selectFields, { count: "exact" })
+  );
+  if (boostedIds.length > 0) normalQuery = normalQuery.not("id", "in", `(${boostedIds.join(",")})`);
+  const normalResult = normalSlots > 0
+    ? await normalQuery
+        .order("published_at", { ascending: sort === "oldest", nullsFirst: false })
+        .order("created_at", { ascending: sort === "oldest" })
+        .range(normalOffset, normalOffset + normalSlots - 1)
+    : { data: [], count: 0, error: null };
 
-  const updates = (data ?? []) as DevlogRow[];
-  const total = count ?? 0;
+  const error = sponsoredError ?? normalResult.error;
+  const updates = [...pageSponsored, ...((normalResult.data ?? []) as DevlogRow[])];
+  const total = sponsoredCount + (normalResult.count ?? 0);
   const hasNext = offset + updates.length < total;
   const reactionCounts = new Map<string, number>();
   const commentCounts = new Map<string, number>();

@@ -18,6 +18,7 @@ export async function buyBoost(formData: FormData) {
   if (error) redirect(`/dashboard/boosts?error=${encodeURIComponent(error.message)}`);
 
   revalidatePath("/discover");
+  revalidatePath("/devlogs");
   revalidatePath("/campaigns");
   revalidatePath("/dashboard/boosts");
   revalidatePath("/dashboard/credits");

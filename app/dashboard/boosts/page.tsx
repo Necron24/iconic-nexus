@@ -9,19 +9,21 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [profile, products, projects, campaigns, updates, active] = await Promise.all([
+  const [profile, products, projects, campaigns, updates, active, performance] = await Promise.all([
     supabase.from("profiles").select("credits").eq("id", user.id).single(),
     supabase.from("boost_products").select("code,name,description,target_type,cost_credits,duration_hours").eq("active", true).order("cost_credits"),
     supabase.from("projects").select("id,name").eq("owner_id", user.id).eq("is_published", true).order("name"),
     supabase.from("testing_campaigns").select("id,title,projects!inner(owner_id)").eq("projects.owner_id", user.id).in("status", ["active", "paused"]).order("created_at", { ascending: false }),
     supabase.from("project_updates").select("id,title,projects!inner(owner_id)").eq("projects.owner_id", user.id).eq("is_published", true).order("published_at", { ascending: false }),
-    supabase.from("content_boosts").select("id,target_type,target_id,boost_code,starts_at,ends_at,status").eq("purchaser_id", user.id).order("created_at", { ascending: false }).limit(20)
+    supabase.from("content_boosts").select("id,target_type,target_id,boost_code,starts_at,ends_at,status").eq("purchaser_id", user.id).order("created_at", { ascending: false }).limit(20),
+    supabase.rpc("get_own_boost_performance")
   ]);
 
   const activeBoosts = (active.data ?? []).filter((boost: any) =>
     boost.status === "active" && new Date(boost.ends_at).getTime() > Date.now()
   );
   const activeByTarget = new Map(activeBoosts.map((boost: any) => [`${boost.target_type}:${boost.target_id}`, boost]));
+  const performanceByBoost = new Map((performance.data ?? []).map((row: any) => [row.boost_id, row]));
 
   const targetMap: Record<string, { id: string; label: string }[]> = {
     project: (projects.data ?? []).map((x: any) => ({ id: x.id, label: x.name })),
@@ -33,7 +35,7 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
     <div className="card p-6">
       <p className="text-sm font-bold uppercase tracking-[.2em] text-cyan">Promotion centre</p>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-        <div><h2 className="text-3xl font-black">Boost your work</h2><p className="mt-2 text-soft">Use Nexus Credits for clearly labelled, time-limited promotion. Boosts never affect Wall of Fame rankings.</p></div>
+        <div><h2 className="text-3xl font-black">Boost your work</h2><p className="mt-2 text-soft">Use Nexus Credits for clearly labelled, time-limited sponsored promotion. Boosts never affect Wall of Fame rankings.</p></div>
         <div className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-3"><span className="text-sm text-soft">Balance</span><strong className="ml-2 text-2xl text-lime">{profile.data?.credits ?? 0}</strong></div>
       </div>
     </div>
@@ -45,7 +47,7 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
         const targets = targetMap[product.target_type] ?? [];
         return <div className="card p-6" key={product.code}>
           <div className="flex items-start justify-between gap-4"><div><Rocket className="text-cyan"/><h3 className="mt-3 text-xl font-black">{product.name}</h3><p className="mt-2 text-sm text-soft">{product.description}</p></div><span className="rounded-full border border-lime/30 bg-lime/10 px-3 py-1 text-sm font-bold text-lime">{product.cost_credits} credits</span></div>
-          <p className="mt-4 text-xs uppercase tracking-wider text-soft">Runs for {product.duration_hours} hours · labelled BOOSTED</p>
+          <p className="mt-4 text-xs uppercase tracking-wider text-soft">Runs for {product.duration_hours} hours · labelled SPONSORED</p>
           {targets.length ? (
             <div className="mt-5 space-y-3">
               {targets.some((target) => activeByTarget.has(`${product.target_type}:${target.id}`)) && (
@@ -74,7 +76,10 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
     </div>
 
     <div className="card p-6"><div className="flex items-center gap-2"><Zap className="text-lime"/><h2 className="text-2xl font-black">Your boost history</h2></div>
-      {(active.data ?? []).length ? <div className="mt-4 divide-y divide-white/10">{(active.data ?? []).map((b: any) => <div key={b.id} className="flex flex-wrap justify-between gap-3 py-4"><div><p className="font-bold">{b.boost_code.replaceAll("_", " ")}</p><p className="text-xs text-soft">{b.target_type} · {b.status}</p></div><p className="text-sm text-soft">Ends {new Date(b.ends_at).toLocaleString("en-ZA", { dateStyle:"medium", timeStyle:"short" })}</p></div>)}</div> : <p className="mt-4 text-soft">No boosts purchased yet.</p>}
+      {(active.data ?? []).length ? <div className="mt-4 divide-y divide-white/10">{(active.data ?? []).map((b: any) => {
+        const stats: any = performanceByBoost.get(b.id) ?? {};
+        return <div key={b.id} className="grid gap-3 py-4 lg:grid-cols-[1fr_auto] lg:items-center"><div><p className="font-bold">{b.boost_code.replaceAll("_", " ")}</p><p className="text-xs text-soft">{b.target_type} · {b.status} · Ends {new Date(b.ends_at).toLocaleString("en-ZA", { dateStyle:"medium", timeStyle:"short" })}</p></div><div className="flex flex-wrap gap-2 text-xs"><span className="badge">{Number(stats.impressions ?? 0)} impressions</span><span className="badge">{Number(stats.views ?? 0)} views</span><span className="badge">{Number(stats.link_clicks ?? 0)} clicks</span><span className="badge">{Number(stats.engagements ?? 0)} engagements</span>{b.target_type === "campaign" && <span className="badge">{Number(stats.conversions ?? 0)} joins</span>}</div></div>;
+      })}</div> : <p className="mt-4 text-soft">No boosts purchased yet.</p>}
     </div>
   </div>;
 }

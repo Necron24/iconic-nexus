@@ -16,6 +16,7 @@ export type DiscoverProject = {
   created_at: string; last_activity_at: string; active_campaign_count: number;
   approved_test_count: number; average_rating: number | null; owner_id: string;
   owner_username: string | null; owner_display_name: string | null; owner_avatar_url: string | null;
+  is_sponsored: boolean; boost_ends_at: string | null;
 };
 type Filters = { search: string; type: string; platform: string; stage: string; activeOnly: boolean; sort: string };
 const initialFilters: Filters = { search: "", type: "", platform: "", stage: "", activeOnly: false, sort: "updated" };

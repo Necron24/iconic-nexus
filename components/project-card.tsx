@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
+import { BadgeDollarSign, FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
@@ -25,6 +25,8 @@ type Project = {
   owner_username?: string | null;
   owner_display_name?: string | null;
   owner_avatar_url?: string | null;
+  is_sponsored?: boolean;
+  boost_ends_at?: string | null;
 };
 
 export function ProjectCard({
@@ -87,7 +89,7 @@ export function ProjectCard({
       : `Testing · ${activeCampaignReward} credit${activeCampaignReward === 1 ? "" : "s"}`;
 
   return (
-    <article className="card relative overflow-hidden">
+    <article className={`card relative overflow-hidden ${project.is_sponsored ? "border-lime/40 bg-lime/[0.035]" : ""}`}>
       <AnalyticsTracker eventType="impression" targetType="project" targetId={project.id} />
       <div className="relative grid h-44 place-items-center overflow-hidden bg-white/5">
         {project.cover_url ? (
@@ -99,6 +101,13 @@ export function ProjectCard({
 
         {(isOwnProject || project.owner_username || project.owner_display_name) && (
           <div className="absolute left-3 top-3 max-w-[58%]">{ownerBadge}</div>
+        )}
+
+        {project.is_sponsored && (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-lime/50 bg-[#102218]/95 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-lime shadow-lg backdrop-blur-md">
+            <BadgeDollarSign size={13} />
+            Sponsored
+          </span>
         )}
 
         {hasActiveCampaign && (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bookmark, MessageCircle, Sparkles } from "lucide-react";
+import { BadgeDollarSign, Bookmark, MessageCircle, Sparkles } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { PlatformBadges, StageBadge } from "@/components/project-meta";
@@ -21,6 +21,8 @@ export type DevlogPreview = DevlogStyle & {
   created_at: string;
   reaction_count: number;
   comment_count: number;
+  is_sponsored?: boolean;
+  boost_ends_at?: string | null;
   project: {
     slug: string;
     name: string;
@@ -44,7 +46,7 @@ export function DevlogPreviewCard({ update }: { update: DevlogPreview }) {
   const headingFont = headingFontStacks[update.heading_font ?? "display"] ?? headingFontStacks.display;
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl border border-white/10 transition hover:-translate-y-0.5 hover:border-white/20">
+    <article className={`group relative overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 hover:border-white/20 ${update.is_sponsored ? "border-lime/40 shadow-[0_0_30px_rgba(132,255,45,0.08)]" : "border-white/10"}`}>
       <AnalyticsTracker eventType="impression" targetType="devlog" targetId={update.id} />
       <div className="p-4 sm:p-6" style={{ background: devlogBackground(update) }}>
         <div className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur-xl sm:p-7">
@@ -57,6 +59,12 @@ export function DevlogPreviewCard({ update }: { update: DevlogPreview }) {
             )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap gap-2">
+                {update.is_sponsored && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-lime/50 bg-lime/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-lime">
+                    <BadgeDollarSign size={13} />
+                    Sponsored
+                  </span>
+                )}
                 <span className="rounded-full border px-3 py-1 text-xs font-black" style={{ borderColor: `${accent}66`, backgroundColor: `${accent}18`, color: accent }}>
                   {labels[update.update_type] ?? update.update_type}
                 </span>

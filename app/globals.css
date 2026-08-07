@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Allow profile upload grid cells to shrink on narrow mobile screens. */
+#profile-form > section.grid > div {
+  min-width: 0;
+}
+
 :root {
   color-scheme: dark;
 }

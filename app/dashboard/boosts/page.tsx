@@ -45,8 +45,8 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
     <div className="grid gap-5 lg:grid-cols-2">
       {(products.data ?? []).map((product: any) => {
         const targets = targetMap[product.target_type] ?? [];
-        return <div className="card p-6" key={product.code}>
-          <div className="flex items-start justify-between gap-4"><div><Rocket className="text-cyan"/><h3 className="mt-3 text-xl font-black">{product.name}</h3><p className="mt-2 text-sm text-soft">{product.description}</p></div><span className="rounded-full border border-lime/30 bg-lime/10 px-3 py-1 text-sm font-bold text-lime">{product.cost_credits} credits</span></div>
+        return <div className="card min-w-0 p-6" key={product.code}>
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between"><div className="min-w-0"><Rocket className="text-cyan"/><h3 className="mt-3 text-xl font-black">{product.name}</h3><p className="mt-2 text-sm text-soft">{product.description}</p></div><span className="shrink-0 rounded-full border border-lime/30 bg-lime/10 px-3 py-1 text-sm font-bold text-lime">{product.cost_credits} credits</span></div>
           <p className="mt-4 text-xs uppercase tracking-wider text-soft">Runs for {product.duration_hours} hours · labelled SPONSORED</p>
           {targets.length ? (
             <div className="mt-5 space-y-3">
@@ -58,7 +58,7 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
                   })}
                 </div>
               )}
-              <form action={buyBoost} className="flex gap-3">
+              <form action={buyBoost} className="flex min-w-0 flex-col gap-3 sm:flex-row">
                 <input type="hidden" name="boostCode" value={product.code}/>
                 <select name="targetId" required className="min-w-0 flex-1">
                   <option value="">Choose {product.target_type}</option>
@@ -67,7 +67,7 @@ export default async function BoostsPage({ searchParams }: { searchParams: Promi
                     return <option key={target.id} value={target.id} disabled={Boolean(activeBoost)}>{target.label}{activeBoost ? " — already boosted" : ""}</option>;
                   })}
                 </select>
-                <button className="btn-primary" type="submit">Activate</button>
+                <button className="btn-primary w-full sm:w-auto" type="submit">Activate</button>
               </form>
             </div>
           ) : <p className="mt-5 rounded-lg border border-dashed border-white/15 p-3 text-sm text-soft">No eligible {product.target_type}s yet.</p>}

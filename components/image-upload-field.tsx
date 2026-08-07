@@ -126,7 +126,7 @@ export function ImageUploadField({
         : "aspect-[16/6] min-h-36";
 
   return (
-    <div className={className}>
+    <div className={`min-w-0 max-w-full ${className}`}>
       <span className="label flex items-center gap-2"><ImagePlus size={16} /> {label}</span>
       <input
         ref={inputRef}
@@ -164,17 +164,17 @@ export function ImageUploadField({
         ) : null}
 
         <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-        <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4">
-          <span className="flex items-center gap-3">
+        <span className="absolute inset-x-0 bottom-0 flex min-w-0 items-end justify-between gap-2 p-3 sm:items-center sm:gap-3 sm:p-4">
+          <span className="flex min-w-0 items-center gap-2 sm:gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/15 bg-black/45 text-cyan backdrop-blur">
               {multiple ? <Images size={20} /> : <ImagePlus size={20} />}
             </span>
-            <span>
+            <span className="min-w-0">
               <strong className="block text-sm text-white">{files.length ? `${files.length} image${files.length === 1 ? "" : "s"} selected` : `Click this image area to choose`}</strong>
               <span className="mt-0.5 block text-xs text-white/65">{helpText}</span>
             </span>
           </span>
-          <span className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-xs font-bold text-white transition group-hover:border-cyan/50 group-hover:text-cyan">Choose image</span>
+          <span className="shrink-0 rounded-lg border border-white/15 bg-black/40 px-2 py-2 text-xs font-bold text-white transition group-hover:border-cyan/50 group-hover:text-cyan sm:px-3">Choose image</span>
         </span>
       </button>
 

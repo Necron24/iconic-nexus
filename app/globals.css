@@ -7,6 +7,10 @@
   min-width: 0;
 }
 
+#profile-form > section > .grid > * {
+  min-width: 0;
+}
+
 @media (max-width: 639px) {
   #profile-form > section:first-of-type .grid-cols-3 {
     grid-template-columns: minmax(0, 1fr);

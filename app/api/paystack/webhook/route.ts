@@ -46,9 +46,16 @@ export async function POST(request: Request) {
       await markPaystackSubscriptionEvent(event.event, event.data as PaystackInvoiceEvent);
     } else if (event.event === "subscription.not_renew" || event.event === "subscription.disable") {
       await markPaystackSubscriptionEvent(event.event, event.data as PaystackSubscriptionEvent);
-    } else if (event.event === "refund.processed" || event.event === "charge.dispute.create") {
+    } else if (
+      event.event === "refund.pending" ||
+      event.event === "refund.processing" ||
+      event.event === "refund.needs-attention" ||
+      event.event === "refund.failed" ||
+      event.event === "refund.processed" ||
+      event.event === "charge.dispute.create"
+    ) {
       await processPaystackReversal(
-        event.event,
+        event.event as "refund.pending" | "refund.processing" | "refund.needs-attention" | "refund.failed" | "refund.processed" | "charge.dispute.create",
         event.data as PaystackRefundEvent | PaystackDisputeEvent
       );
     }

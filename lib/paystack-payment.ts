@@ -125,7 +125,7 @@ export async function markPaystackSubscriptionEvent(
 }
 
 export async function processPaystackReversal(
-  eventType: "refund.processed" | "charge.dispute.create",
+  eventType: "refund.pending" | "refund.processing" | "refund.needs-attention" | "refund.failed" | "refund.processed" | "charge.dispute.create",
   data: PaystackRefundEvent | PaystackDisputeEvent
 ) {
   const refund = data as PaystackRefundEvent;
@@ -141,6 +141,9 @@ export async function processPaystackReversal(
     p_payment_reference: paymentReference,
     p_event_key: `${eventType}:${eventId}`,
     p_event_type: eventType,
+    p_refund_amount_zar: eventType.startsWith("refund.") && refund.amount != null
+      ? Number(refund.amount) / 100
+      : null,
     p_raw_payload: data
   });
   if (error) throw new Error(error.message);

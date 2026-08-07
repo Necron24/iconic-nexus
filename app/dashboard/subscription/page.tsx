@@ -45,6 +45,6 @@ export default async function SubscriptionPage({ searchParams }: { searchParams:
         {plan.code === "free" ? <div className="mt-6 rounded-xl border border-white/10 p-3 text-center text-sm text-soft">Included for every account</div> : <form action="/api/paystack/subscription-checkout" method="post" className="mt-6"><input type="hidden" name="planCode" value={plan.code}/><button className="btn-primary w-full" disabled={active}>{active ? "Current plan" : `Choose ${plan.name}`}</button></form>}
       </article>;
     })}</div>
-    <p className="text-xs text-soft">Subscription activation and recurring payments are confirmed by secure Paystack server notifications. Keep Paystack in test mode until the full checkout and renewal flow has been tested.</p>
+    <p className="text-xs text-soft">Subscription activation and recurring payments are confirmed securely by Paystack. Paid plans renew monthly until cancelled from this page.</p>
   </div>;
 }

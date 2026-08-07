@@ -21,8 +21,9 @@ const links = [
   ["/help", "Help"]
 ] as const;
 
-export function DashboardNav() {
+export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const visibleLinks = isAdmin ? [...links, ["/dashboard/admin", "Admin"] as const] : links;
 
   return (
     <div className="relative">
@@ -30,7 +31,7 @@ export function DashboardNav() {
         aria-label="Dashboard navigation"
         className="flex snap-x gap-2 overflow-x-auto rounded-[1.4rem] border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.09),0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {links.map(([href, label]) => {
+        {visibleLinks.map(([href, label]) => {
           const active = href === "/dashboard"
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`);

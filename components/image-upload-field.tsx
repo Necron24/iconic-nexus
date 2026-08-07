@@ -126,7 +126,7 @@ export function ImageUploadField({
         : "aspect-[16/6] min-h-36";
 
   return (
-    <div className={`min-w-0 max-w-full ${className}`}>
+    <div className={`w-full min-w-0 max-w-full overflow-hidden ${className}`}>
       <span className="label flex items-center gap-2"><ImagePlus size={16} /> {label}</span>
       <input
         ref={inputRef}

@@ -29,7 +29,7 @@ export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
     <div className="relative">
       <nav
         aria-label="Dashboard navigation"
-        className="flex snap-x gap-2 overflow-x-auto rounded-[1.4rem] border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.09),0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x gap-2 overflow-x-auto rounded-[1.4rem] border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.09),0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-x-visible"
       >
         {visibleLinks.map(([href, label]) => {
           const active = href === "/dashboard"

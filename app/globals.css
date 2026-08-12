@@ -78,6 +78,13 @@ input[type="file"] {
   margin: 0 auto;
 }
 
+/* Discovery benefits from the extra horizontal space on large monitors,
+   especially when users choose five or six project cards per row. */
+.container-discover {
+  width: min(1680px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
 .card {
   @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur;
 }

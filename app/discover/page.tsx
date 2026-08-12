@@ -64,7 +64,7 @@ export default async function DiscoverPage() {
   } : null;
 
   return (
-    <section className="container-page py-14">
+    <section className="container-discover py-14">
       <div className="mb-8">
         <p className="text-sm font-bold uppercase tracking-[.25em] text-cyan">Discover</p>
         <h1 className="mt-2 text-4xl font-black">Find something worth testing</h1>

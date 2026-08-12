@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Bookmark, BookmarkX, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { toggleDevlogBookmark } from "@/app/devlogs/[updateId]/actions";
+import { removeProjectBookmark } from "@/app/bookmarks/actions";
 
 type SavedRow = {
   created_at: string;
@@ -32,33 +33,42 @@ export default async function SavedDevlogsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data, error } = await supabase
-    .from("devlog_bookmarks")
-    .select("created_at,project_updates!inner(id,title,body,update_type,published_at,created_at,accent_color,projects!inner(slug,name,icon_url))")
-    .eq("profile_id", user.id)
-    .order("created_at", { ascending: false });
+  const [devlogsResult, projectsResult] = await Promise.all([
+    supabase.from("devlog_bookmarks")
+      .select("created_at,project_updates!inner(id,title,body,update_type,published_at,created_at,accent_color,projects!inner(slug,name,icon_url))")
+      .eq("profile_id", user.id).order("created_at", { ascending: false }),
+    supabase.from("project_bookmarks")
+      .select("created_at,projects!inner(id,slug,name,short_description,icon_url,cover_url,type,stage,platform)")
+      .eq("profile_id", user.id).order("created_at", { ascending: false })
+  ]);
 
-  const rows = (data ?? []) as SavedRow[];
+  const rows = (devlogsResult.data ?? []) as SavedRow[];
+  const savedProjects = projectsResult.data ?? [];
+  const error = devlogsResult.error || projectsResult.error;
 
   return (
     <div>
       <div className="mb-6">
         <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[.2em] text-cyan"><Bookmark size={16} /> Saved</p>
-        <h2 className="mt-2 text-3xl font-black">Saved devlogs</h2>
-        <p className="mt-2 text-soft">Keep useful releases, progress reports and testing calls close at hand.</p>
+        <h2 className="mt-2 text-3xl font-black">Saved projects and devlogs</h2>
+        <p className="mt-2 text-soft">Keep projects, releases, progress reports and testing calls close at hand.</p>
       </div>
 
       {error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">{error.message}</div>}
-      {!error && rows.length === 0 ? (
+      {!error && rows.length === 0 && savedProjects.length === 0 ? (
         <div className="card p-10 text-center">
           <Bookmark className="mx-auto text-cyan" size={36} />
           <h3 className="mt-4 text-2xl font-black">Nothing saved yet</h3>
-          <p className="mt-2 text-soft">Save a devlog and it will appear here.</p>
-          <Link href="/devlogs" className="btn-primary mt-6">Browse devlogs</Link>
+          <p className="mt-2 text-soft">Save a project or devlog and it will appear here.</p>
+          <Link href="/discover" className="btn-primary mt-6">Discover projects</Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {rows.map((row) => {
+        <div className="space-y-10">
+          <section><h3 className="text-2xl font-black">Saved projects</h3><p className="mt-1 text-sm text-soft">Projects you want to revisit later.</p>
+            {savedProjects.length === 0 ? <div className="card mt-4 p-6 text-soft">No saved projects yet. <Link href="/discover" className="font-bold text-cyan">Browse Discover</Link></div> : <div className="mt-4 grid gap-4 md:grid-cols-2">{savedProjects.map((row: any) => { const project = Array.isArray(row.projects) ? row.projects[0] : row.projects; return <article key={project.id} className="card overflow-hidden"><div className="grid grid-cols-[110px_1fr] sm:grid-cols-[150px_1fr]"><div className="min-h-36 bg-white/5">{project.cover_url ? <img src={project.cover_url} alt="" className="h-full w-full object-cover"/> : project.icon_url ? <img src={project.icon_url} alt="" className="h-full w-full object-cover"/> : <span className="grid h-full place-items-center text-3xl font-black text-lime">{project.name.charAt(0)}</span>}</div><div className="min-w-0 p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan">{project.type} · {project.stage}</p><h4 className="mt-2 truncate text-xl font-black">{project.name}</h4><p className="mt-2 line-clamp-2 text-sm text-soft">{project.short_description}</p><div className="mt-4 flex flex-wrap gap-2"><Link href={`/projects/${project.slug}`} className="btn-primary !px-4 !py-2">Open</Link><form action={removeProjectBookmark.bind(null, project.id)}><button className="btn-secondary !px-3 !py-2 text-red-200" aria-label={`Remove ${project.name} from saved projects`}><BookmarkX size={16}/></button></form></div></div></div></article>; })}</div>}
+          </section>
+          <section><h3 className="text-2xl font-black">Saved devlogs</h3><p className="mt-1 text-sm text-soft">Updates and releases you want to read again.</p><div className="mt-4 space-y-4">
+          {rows.length === 0 ? <div className="card p-6 text-soft">No saved devlogs yet. <Link href="/devlogs" className="font-bold text-cyan">Browse devlogs</Link></div> : rows.map((row) => {
             const update = Array.isArray(row.project_updates) ? row.project_updates[0] : row.project_updates;
             const project = Array.isArray(update.projects) ? update.projects[0] : update.projects;
             return (
@@ -83,7 +93,7 @@ export default async function SavedDevlogsPage() {
                 </div>
               </article>
             );
-          })}
+          })}</div></section>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const EVENTS = new Set(["impression", "view", "link_click", "share", "follow"]);
+const EVENTS = new Set(["impression", "view", "link_click", "share", "save", "follow"]);
 const TARGETS = new Set(["project", "devlog", "campaign", "profile"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

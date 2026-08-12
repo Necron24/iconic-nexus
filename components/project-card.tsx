@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeDollarSign, FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
+import { BadgeDollarSign, Bookmark, BookmarkCheck, FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
@@ -34,12 +34,16 @@ export function ProjectCard({
   currentUserId,
   following = false,
   onToggleFollow,
+  bookmarked = false,
+  onToggleBookmark,
   density = "comfortable"
 }: {
   project: Project;
   currentUserId?: string | null;
   following?: boolean;
   onToggleFollow?: () => void;
+  bookmarked?: boolean;
+  onToggleBookmark?: () => void;
   density?: "comfortable" | "compact";
 }) {
   const compact = density === "compact";
@@ -175,6 +179,7 @@ export function ProjectCard({
 
         <div className="flex gap-2">
           <Link href={`/projects/${project.slug}`} className="btn-secondary flex-1">View project</Link>
+          {onToggleBookmark && <button type="button" onClick={onToggleBookmark} className={bookmarked ? "btn-secondary !px-3 border-cyan/40 bg-cyan/10 text-cyan" : "btn-secondary !px-3"} aria-pressed={bookmarked} aria-label={bookmarked ? `Remove ${project.name} from saved projects` : `Save ${project.name} for later`} title={bookmarked ? "Saved project" : "Save project"}>{bookmarked ? <BookmarkCheck size={17}/> : <Bookmark size={17}/>}</button>}
           {onToggleFollow && !isOwnProject && <button type="button" onClick={onToggleFollow} className={following ? "btn-secondary !px-3 text-lime" : "btn-secondary !px-3"} aria-label={following ? `Unfollow ${project.name}` : `Follow ${project.name}`} title={following ? "Following project" : "Follow project"}>{following ? <UserCheck size={17}/> : <UserPlus size={17}/>}</button>}
         </div>
       </div>

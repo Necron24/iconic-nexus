@@ -8,6 +8,8 @@ import { DevlogCard } from "@/components/updates/devlog-card";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { TrackedLink } from "@/components/tracked-link";
 import { FollowButton } from "@/components/follow-button";
+import { BookmarkButton } from "@/components/bookmark-button";
+import { toggleProjectBookmark } from "@/app/bookmarks/actions";
 import { toggleProjectFollow } from "@/app/following/actions";
 import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
 
@@ -26,7 +28,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
 
   const screenshots = [...(project.project_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
-  const [{ data: updates }, { count: followerCount }, followResult] = await Promise.all([
+  const [{ data: updates }, { count: followerCount }, followResult, bookmarkResult] = await Promise.all([
     supabase
       .from("project_updates")
       .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
@@ -38,7 +40,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     supabase.from("project_follows").select("project_id", { count: "exact", head: true }).eq("project_id", project.id),
     user && user.id !== project.owner_id
       ? supabase.from("project_follows").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle()
-      : Promise.resolve({ data: null })
+      : Promise.resolve({ data: null }),
+    user ? supabase.from("project_bookmarks").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null })
   ]);
 
   return (
@@ -61,6 +64,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
             </div>
 
             <div className="flex shrink-0 flex-wrap gap-2">
+              <BookmarkButton action={toggleProjectBookmark.bind(null, project.id, `/projects/${project.slug}`)} saved={Boolean(bookmarkResult.data)}/>
               {user?.id !== project.owner_id && (
                 <FollowButton
                   action={toggleProjectFollow.bind(null, project.id, `/projects/${project.slug}`)}

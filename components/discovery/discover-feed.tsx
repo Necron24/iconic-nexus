@@ -52,6 +52,7 @@ export function DiscoverFeed({
   const [hasMore, setHasMore] = useState(initialProjects.length === PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [gridColumns, setGridColumns] = useState<GridColumns>(3);
   const sentinel = useRef<HTMLDivElement | null>(null);
   const requestId = useRef(0);
@@ -68,8 +69,12 @@ export function DiscoverFeed({
   };
   useEffect(() => {
     if (!currentUserId) return;
-    void supabase.from("project_follows").select("project_id").eq("profile_id", currentUserId).then(({ data }) => {
-      setFollowedIds(new Set((data ?? []).map((row) => row.project_id)));
+    void Promise.all([
+      supabase.from("project_follows").select("project_id").eq("profile_id", currentUserId),
+      supabase.from("project_bookmarks").select("project_id").eq("profile_id", currentUserId)
+    ]).then(([follows, bookmarks]) => {
+      setFollowedIds(new Set((follows.data ?? []).map((row) => row.project_id)));
+      setBookmarkedIds(new Set((bookmarks.data ?? []).map((row) => row.project_id)));
     });
   }, [currentUserId, supabase]);
 
@@ -99,6 +104,22 @@ export function DiscoverFeed({
       void trackAnalyticsEvent("follow", "project", project.id);
     }
   }, [currentUserId, followedIds, supabase]);
+
+  const toggleBookmark = useCallback(async (project: DiscoverProject) => {
+    if (!currentUserId) {
+      window.location.href = `/login?error=${encodeURIComponent("Please log in to save projects.")}&next=${encodeURIComponent("/discover")}`;
+      return;
+    }
+    const saved = bookmarkedIds.has(project.id);
+    setBookmarkedIds((current) => { const next = new Set(current); if (saved) next.delete(project.id); else next.add(project.id); return next; });
+    const result = saved
+      ? await supabase.from("project_bookmarks").delete().eq("project_id", project.id).eq("profile_id", currentUserId)
+      : await supabase.from("project_bookmarks").insert({ project_id: project.id, profile_id: currentUserId });
+    if (result.error) {
+      setBookmarkedIds((current) => { const next = new Set(current); if (saved) next.add(project.id); else next.delete(project.id); return next; });
+      setError(result.error.message);
+    } else if (!saved) void trackAnalyticsEvent("save", "project", project.id);
+  }, [bookmarkedIds, currentUserId, supabase]);
 
   const query = useCallback(async (offset: number, current: Filters) => {
     return supabase.rpc("browse_projects", { p_search: current.search.trim() || null, p_type: current.type || null, p_platform: current.platform || null, p_stage: current.stage || null, p_active_only: current.activeOnly, p_sort: current.sort, p_limit: PAGE_SIZE, p_offset: offset });
@@ -163,7 +184,7 @@ export function DiscoverFeed({
     </div><div className="mt-4 flex flex-wrap items-center justify-between gap-3"><label className="flex cursor-pointer items-center gap-2 text-sm text-soft"><input type="checkbox" className="h-4 w-4 accent-lime" checked={filters.activeOnly} onChange={(e)=>setFilters(v=>({...v,activeOnly:e.target.checked}))}/>Only projects that currently need testers</label><div className="flex items-center gap-4"><span className="text-xs text-soft">{checking ? "Checking for updates…" : "Live updates on"}</span><button type="button" onClick={clearFilters} className="flex items-center gap-2 text-sm font-bold text-cyan hover:text-white"><SlidersHorizontal size={16}/> Reset filters</button></div></div></div>
     {error&&<div className="mb-6 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">Projects could not be loaded: {error}</div>}
     {projects.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-soft"><strong className="text-white">{projects.length}</strong> projects shown</p><div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-1.5" aria-label="Projects per row"><span className="hidden items-center gap-1.5 px-2 text-xs font-bold text-soft sm:flex"><LayoutGrid size={15}/> Layout</span>{([3,4,5,6] as GridColumns[]).map(columns=><button key={columns} type="button" onClick={()=>changeGridColumns(columns)} aria-pressed={gridColumns===columns} aria-label={`Show ${columns} projects per row`} className={`grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-black transition ${gridColumns===columns?"bg-cyan text-ink shadow-[0_0_16px_rgba(87,230,255,.25)]":"text-soft hover:bg-white/10 hover:text-white"}`}>{columns}</button>)}</div></div>}
-    {!loading&&projects.length===0?<div className="card p-10 text-center"><h2 className="text-2xl font-black">No matching projects</h2><p className="mx-auto mt-3 max-w-xl text-soft">Try a different search or clear some filters.</p></div>:<div className={`grid gap-5 ${gridClasses[gridColumns]}`}>{projects.map(project=><ProjectCard key={project.id} project={project} currentUserId={currentUserId} following={followedIds.has(project.id)} onToggleFollow={() => void toggleFollow(project)} density={gridColumns >= 5 ? "compact" : "comfortable"}/>)}</div>}
+    {!loading&&projects.length===0?<div className="card p-10 text-center"><h2 className="text-2xl font-black">No matching projects</h2><p className="mx-auto mt-3 max-w-xl text-soft">Try a different search or clear some filters.</p></div>:<div className={`grid gap-5 ${gridClasses[gridColumns]}`}>{projects.map(project=><ProjectCard key={project.id} project={project} currentUserId={currentUserId} following={followedIds.has(project.id)} onToggleFollow={() => void toggleFollow(project)} bookmarked={bookmarkedIds.has(project.id)} onToggleBookmark={() => void toggleBookmark(project)} density={gridColumns >= 5 ? "compact" : "comfortable"}/>)}</div>}
     <div ref={sentinel} className="mt-8 flex min-h-20 items-center justify-center">{loading?<div className="flex items-center gap-3 text-soft"><LoaderCircle className="animate-spin" size={20}/> Loading more projects…</div>:hasMore?<button type="button" className="btn-secondary" onClick={loadMore}>Load more projects</button>:projects.length>0?<p className="text-sm text-soft">You have reached the end of the project list.</p>:null}</div>
   </>;
 }

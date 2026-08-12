@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BadgeDollarSign, Bookmark, BookmarkCheck, FlaskConical, ImageIcon, Star, UserCheck, UserPlus, UserRound, Users } from "lucide-react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
@@ -46,6 +47,7 @@ export function ProjectCard({
   onToggleBookmark?: () => void;
   density?: "comfortable" | "compact";
 }) {
+  const router = useRouter();
   const compact = density === "compact";
   const isOwnProject = Boolean(currentUserId && project.owner_id === currentUserId);
   const ownerName =
@@ -96,12 +98,26 @@ export function ProjectCard({
       : `Testing · ${activeCampaignReward} credit${activeCampaignReward === 1 ? "" : "s"}`;
 
   return (
-    <article className={`card relative overflow-hidden ${project.is_sponsored ? "border-lime/40 bg-lime/[0.035]" : ""}`}>
+    <article
+      role="link"
+      tabIndex={0}
+      aria-label={`View ${project.name}`}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a,button,input,select,textarea,label,form")) return;
+        router.push(`/projects/${project.slug}`);
+      }}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        router.push(`/projects/${project.slug}`);
+      }}
+      className={`card group relative cursor-pointer overflow-hidden transition duration-200 hover:-translate-y-1 hover:border-cyan/35 hover:bg-white/[0.065] hover:shadow-[0_20px_60px_rgba(0,0,0,.28),0_0_28px_rgba(87,230,255,.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${project.is_sponsored ? "border-lime/40 bg-lime/[0.035]" : ""}`}
+    >
       <AnalyticsTracker eventType="impression" targetType="project" targetId={project.id} />
       <div className={`relative grid place-items-center overflow-hidden bg-white/5 ${compact ? "h-32" : "h-44"}`}>
         {project.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={project.cover_url} alt="" className="h-full w-full object-cover" />
+          <img src={project.cover_url} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
         ) : (
           <ImageIcon className="text-white/20" size={38} />
         )}
@@ -149,7 +165,7 @@ export function ProjectCard({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className={`truncate font-black ${compact ? "text-lg" : "text-2xl"}`}>{project.name}</h3>
+            <h3 className={`truncate font-black transition group-hover:text-cyan ${compact ? "text-lg" : "text-2xl"}`}>{project.name}</h3>
             <div className={`${compact ? "mt-1 gap-1" : "mt-2 gap-1.5"} flex flex-wrap`}>
               <ProjectTypeBadge type={project.type} compact />
               <PlatformBadges platform={project.platform} compact />

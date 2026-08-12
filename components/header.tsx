@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MobileMenu } from "@/components/mobile-menu";
 import { BrandLogo } from "@/components/brand-logo";
 import { MainNav } from "@/components/main-nav";
+import { CommunityPurposeNotice } from "@/components/community-purpose-notice";
 import {
   NotificationPopover,
   type HeaderNotification,
@@ -13,6 +14,7 @@ type HeaderProfile = {
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  community_notice_acknowledged_at: string | null;
 };
 
 function ProfileAvatar({
@@ -61,7 +63,7 @@ export async function Header() {
       const [{ data: profileData }, { count }, { data }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("username, display_name, avatar_url")
+          .select("username, display_name, avatar_url, community_notice_acknowledged_at")
           .eq("id", user.id)
           .maybeSingle(),
         supabase
@@ -94,7 +96,7 @@ export async function Header() {
     ? `@${username}`
     : profile?.display_name?.trim() || "My profile";
 
-  return (
+  return (<>
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink/85 backdrop-blur-xl">
       <div className="container-page flex h-20 items-center justify-between gap-4">
         <BrandLogo priority className="shrink-0" />
@@ -161,5 +163,7 @@ export async function Header() {
         </div>
       </div>
     </header>
+    {user && profile?.community_notice_acknowledged_at == null && <CommunityPurposeNotice />}
+  </>
   );
 }

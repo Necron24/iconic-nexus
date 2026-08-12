@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Filter, LoaderCircle, RefreshCw, Search, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Filter, LayoutGrid, LoaderCircle, RefreshCw, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ProjectCard } from "@/components/project-card";
 import { PlatformBadges } from "@/components/project-meta";
@@ -20,6 +20,13 @@ export type DiscoverProject = {
 };
 type Filters = { search: string; type: string; platform: string; stage: string; activeOnly: boolean; sort: string };
 const initialFilters: Filters = { search: "", type: "", platform: "", stage: "", activeOnly: false, sort: "updated" };
+type GridColumns = 3 | 4 | 5 | 6;
+const gridClasses: Record<GridColumns, string> = {
+  3: "md:grid-cols-2 lg:grid-cols-3",
+  4: "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  5: "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+  6: "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+};
 
 function normalise(rows: DiscoverProject[]) {
   return rows.map((row) => ({ ...row, active_campaign_count: Number(row.active_campaign_count ?? 0), approved_test_count: Number(row.approved_test_count ?? 0), average_rating: row.average_rating === null ? null : Number(row.average_rating) }));
@@ -45,11 +52,20 @@ export function DiscoverFeed({
   const [hasMore, setHasMore] = useState(initialProjects.length === PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+  const [gridColumns, setGridColumns] = useState<GridColumns>(3);
   const sentinel = useRef<HTMLDivElement | null>(null);
   const requestId = useRef(0);
   const projectIds = useRef(new Set(initialProjects.map((p) => p.id)));
 
   useEffect(() => { projectIds.current = new Set(projects.map((p) => p.id)); }, [projects]);
+  useEffect(() => {
+    const stored = Number(window.localStorage.getItem("nexus-discover-grid"));
+    if (stored === 3 || stored === 4 || stored === 5 || stored === 6) setGridColumns(stored);
+  }, []);
+  const changeGridColumns = (columns: GridColumns) => {
+    setGridColumns(columns);
+    window.localStorage.setItem("nexus-discover-grid", String(columns));
+  };
   useEffect(() => {
     if (!currentUserId) return;
     void supabase.from("project_follows").select("project_id").eq("profile_id", currentUserId).then(({ data }) => {
@@ -146,7 +162,8 @@ export function DiscoverFeed({
       <button type="button" onClick={applyFilters} disabled={loading} className="btn-primary gap-2 whitespace-nowrap disabled:opacity-50">{loading?<LoaderCircle className="animate-spin" size={17}/>:<Filter size={17}/>} Apply</button>
     </div><div className="mt-4 flex flex-wrap items-center justify-between gap-3"><label className="flex cursor-pointer items-center gap-2 text-sm text-soft"><input type="checkbox" className="h-4 w-4 accent-lime" checked={filters.activeOnly} onChange={(e)=>setFilters(v=>({...v,activeOnly:e.target.checked}))}/>Only projects that currently need testers</label><div className="flex items-center gap-4"><span className="text-xs text-soft">{checking ? "Checking for updates…" : "Live updates on"}</span><button type="button" onClick={clearFilters} className="flex items-center gap-2 text-sm font-bold text-cyan hover:text-white"><SlidersHorizontal size={16}/> Reset filters</button></div></div></div>
     {error&&<div className="mb-6 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200">Projects could not be loaded: {error}</div>}
-    {!loading&&projects.length===0?<div className="card p-10 text-center"><h2 className="text-2xl font-black">No matching projects</h2><p className="mx-auto mt-3 max-w-xl text-soft">Try a different search or clear some filters.</p></div>:<div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{projects.map(project=><ProjectCard key={project.id} project={project} currentUserId={currentUserId} following={followedIds.has(project.id)} onToggleFollow={() => void toggleFollow(project)}/>)}</div>}
+    {projects.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-soft"><strong className="text-white">{projects.length}</strong> projects shown</p><div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-1.5" aria-label="Projects per row"><span className="hidden items-center gap-1.5 px-2 text-xs font-bold text-soft sm:flex"><LayoutGrid size={15}/> Layout</span>{([3,4,5,6] as GridColumns[]).map(columns=><button key={columns} type="button" onClick={()=>changeGridColumns(columns)} aria-pressed={gridColumns===columns} aria-label={`Show ${columns} projects per row`} className={`grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-black transition ${gridColumns===columns?"bg-cyan text-ink shadow-[0_0_16px_rgba(87,230,255,.25)]":"text-soft hover:bg-white/10 hover:text-white"}`}>{columns}</button>)}</div></div>}
+    {!loading&&projects.length===0?<div className="card p-10 text-center"><h2 className="text-2xl font-black">No matching projects</h2><p className="mx-auto mt-3 max-w-xl text-soft">Try a different search or clear some filters.</p></div>:<div className={`grid gap-5 ${gridClasses[gridColumns]}`}>{projects.map(project=><ProjectCard key={project.id} project={project} currentUserId={currentUserId} following={followedIds.has(project.id)} onToggleFollow={() => void toggleFollow(project)} density={gridColumns >= 5 ? "compact" : "comfortable"}/>)}</div>}
     <div ref={sentinel} className="mt-8 flex min-h-20 items-center justify-center">{loading?<div className="flex items-center gap-3 text-soft"><LoaderCircle className="animate-spin" size={20}/> Loading more projects…</div>:hasMore?<button type="button" className="btn-secondary" onClick={loadMore}>Load more projects</button>:projects.length>0?<p className="text-sm text-soft">You have reached the end of the project list.</p>:null}</div>
   </>;
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bell, HelpCircle, LogOut, Menu, Newspaper, Trophy, X } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 
@@ -13,6 +14,8 @@ export function MobileMenu({
   unread: number;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const navClass = (href: string) => `rounded-xl border-l-2 px-4 py-3 transition ${pathname === href || pathname.startsWith(`${href}/`) ? "border-cyan bg-cyan/10 font-bold text-white" : "border-transparent hover:bg-white/5"}`;
 
   return (
     <div className="md:hidden">
@@ -31,7 +34,7 @@ export function MobileMenu({
           <nav className="container-page flex flex-col gap-2">
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-xl px-4 py-3 hover:bg-white/5"
+              className={navClass("/discover")}
               href="/discover"
             >
               Discover
@@ -39,7 +42,7 @@ export function MobileMenu({
 
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-xl px-4 py-3 hover:bg-white/5"
+              className={navClass("/devlogs")}
               href="/devlogs"
             >
               <span className="flex items-center gap-2"><Newspaper size={17} /> Devlogs</span>
@@ -47,7 +50,7 @@ export function MobileMenu({
 
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-xl px-4 py-3 hover:bg-white/5"
+              className={navClass("/campaigns")}
               href="/campaigns"
             >
               Campaigns
@@ -55,7 +58,7 @@ export function MobileMenu({
 
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-xl px-4 py-3 hover:bg-white/5"
+              className={navClass("/wall-of-fame")}
               href="/wall-of-fame"
             >
               <span className="flex items-center gap-2"><Trophy size={17} /> Wall of Fame</span>
@@ -63,7 +66,7 @@ export function MobileMenu({
 
             <Link
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-3 hover:bg-white/5"
+              className={`${navClass("/help")} flex items-center gap-2`}
               href="/help"
             >
               <HelpCircle size={17} />
@@ -74,7 +77,7 @@ export function MobileMenu({
               <>
                 <Link
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3 hover:bg-white/5"
+                  className={navClass("/dashboard")}
                   href="/dashboard"
                 >
                   Dashboard

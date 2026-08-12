@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MobileMenu } from "@/components/mobile-menu";
 import { BrandLogo } from "@/components/brand-logo";
+import { MainNav } from "@/components/main-nav";
 import {
   NotificationPopover,
   type HeaderNotification,
@@ -98,28 +99,7 @@ export async function Header() {
       <div className="container-page flex h-20 items-center justify-between gap-4">
         <BrandLogo priority className="shrink-0" />
 
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-soft lg:flex">
-          <Link href="/discover" className="hover:text-white">
-            Discover
-          </Link>
-          <Link href="/devlogs" className="hover:text-white">
-            Devlogs
-          </Link>
-          <Link href="/campaigns" className="hover:text-white">
-            Campaigns
-          </Link>
-          <Link href="/wall-of-fame" className="hover:text-white">
-            Wall of Fame
-          </Link>
-          {user && (
-            <Link href="/dashboard" className="hover:text-white">
-              Dashboard
-            </Link>
-          )}
-          <Link href="/help" className="hover:text-white">
-            Help
-          </Link>
-        </nav>
+        <MainNav signedIn={Boolean(user)} />
 
         <div className="hidden items-center gap-3 lg:flex">
           {user ? (

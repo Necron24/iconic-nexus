@@ -33,13 +33,16 @@ export function ProjectCard({
   project,
   currentUserId,
   following = false,
-  onToggleFollow
+  onToggleFollow,
+  density = "comfortable"
 }: {
   project: Project;
   currentUserId?: string | null;
   following?: boolean;
   onToggleFollow?: () => void;
+  density?: "comfortable" | "compact";
 }) {
+  const compact = density === "compact";
   const isOwnProject = Boolean(currentUserId && project.owner_id === currentUserId);
   const ownerName =
     project.owner_display_name?.trim() ||
@@ -91,7 +94,7 @@ export function ProjectCard({
   return (
     <article className={`card relative overflow-hidden ${project.is_sponsored ? "border-lime/40 bg-lime/[0.035]" : ""}`}>
       <AnalyticsTracker eventType="impression" targetType="project" targetId={project.id} />
-      <div className="relative grid h-44 place-items-center overflow-hidden bg-white/5">
+      <div className={`relative grid place-items-center overflow-hidden bg-white/5 ${compact ? "h-32" : "h-44"}`}>
         {project.cover_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={project.cover_url} alt="" className="h-full w-full object-cover" />
@@ -127,23 +130,23 @@ export function ProjectCard({
         )}
       </div>
 
-      <div className="p-5">
-        <div className="mb-4 flex items-start gap-3">
+      <div className={compact ? "p-3" : "p-5"}>
+        <div className={`flex items-start ${compact ? "mb-3 gap-2" : "mb-4 gap-3"}`}>
           {project.icon_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={project.icon_url}
               alt={`${project.name} icon`}
-              className="h-12 w-12 rounded-xl object-cover"
+              className={`${compact ? "h-9 w-9 rounded-lg" : "h-12 w-12 rounded-xl"} object-cover`}
             />
           ) : (
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-lime font-black text-ink">
+            <div className={`grid shrink-0 place-items-center bg-lime font-black text-ink ${compact ? "h-9 w-9 rounded-lg text-sm" : "h-12 w-12 rounded-xl"}`}>
               {project.name.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-2xl font-black">{project.name}</h3>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <h3 className={`truncate font-black ${compact ? "text-lg" : "text-2xl"}`}>{project.name}</h3>
+            <div className={`${compact ? "mt-1 gap-1" : "mt-2 gap-1.5"} flex flex-wrap`}>
               <ProjectTypeBadge type={project.type} compact />
               <PlatformBadges platform={project.platform} compact />
               <StageBadge stage={project.stage} compact />
@@ -151,22 +154,22 @@ export function ProjectCard({
           </div>
         </div>
 
-        <p className="mb-5 min-h-12 text-sm leading-6 text-white/65">
+        <p className={`${compact ? "mb-3 min-h-10 line-clamp-2 text-xs leading-5" : "mb-5 min-h-12 text-sm leading-6"} text-white/65`}>
           {project.short_description}
         </p>
 
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          <div className={`rounded-xl border p-2.5 ${hasActiveCampaign ? "border-cyan/25 bg-cyan/[0.07]" : "border-white/10 bg-white/[0.03]"}`}>
+        <div className={`${compact ? "mb-3 gap-1" : "mb-5 gap-2"} grid grid-cols-3`}>
+          <div className={`rounded-xl border ${compact ? "p-1.5" : "p-2.5"} ${hasActiveCampaign ? "border-cyan/25 bg-cyan/[0.07]" : "border-white/10 bg-white/[0.03]"}`}>
             <FlaskConical className={hasActiveCampaign ? "text-cyan" : "text-soft"} size={15} />
-            <p className="mt-1 text-lg font-black">{activeCampaignCount}</p><p className="text-[10px] uppercase tracking-wide text-soft">Active</p>
+            <p className={`${compact ? "text-sm" : "mt-1 text-lg"} font-black`}>{activeCampaignCount}</p><p className="text-[9px] uppercase tracking-wide text-soft">Active</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+          <div className={`rounded-xl border border-white/10 bg-white/[0.03] ${compact ? "p-1.5" : "p-2.5"}`}>
             <Users className="text-lime" size={15} />
-            <p className="mt-1 text-lg font-black">{project.approved_test_count ?? 0}</p><p className="text-[10px] uppercase tracking-wide text-soft">Tests</p>
+            <p className={`${compact ? "text-sm" : "mt-1 text-lg"} font-black`}>{project.approved_test_count ?? 0}</p><p className="text-[9px] uppercase tracking-wide text-soft">Tests</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+          <div className={`rounded-xl border border-white/10 bg-white/[0.03] ${compact ? "p-1.5" : "p-2.5"}`}>
             <Star className="text-amber-300" size={15} />
-            <p className="mt-1 text-lg font-black">{project.average_rating ? Number(project.average_rating).toFixed(1) : "New"}</p><p className="text-[10px] uppercase tracking-wide text-soft">Rating</p>
+            <p className={`${compact ? "text-sm" : "mt-1 text-lg"} font-black`}>{project.average_rating ? Number(project.average_rating).toFixed(1) : "New"}</p><p className="text-[9px] uppercase tracking-wide text-soft">Rating</p>
           </div>
         </div>
 

@@ -16,7 +16,7 @@ export function BrandLogo({
     >
       <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-[#071127] p-1.5 shadow-[0_0_24px_rgba(87,230,255,.12)] transition group-hover:scale-[1.02] group-hover:shadow-[0_0_28px_rgba(158,255,58,.18)] 2xl:hidden">
         <Image
-          src="/brand/iconic-nexus-icon.png"
+          src="/brand/iconic-nexus-emblem-v2.png"
           alt="Iconic Nexus"
           width={48}
           height={48}

@@ -63,7 +63,7 @@ export default async function HomePage() {
           <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-lime/10 blur-3xl" />
           <div className="absolute left-6 top-6 h-28 w-28 rounded-full bg-cyan/10 blur-3xl" />
           <div className="mb-6 rounded-3xl border border-white/10 bg-[#071127] p-4">
-            <Image src="/brand/iconic-nexus-icon.png" alt="Iconic Nexus emblem" width={660} height={660} className="mx-auto h-28 w-28 rounded-3xl object-cover md:h-36 md:w-36" />
+            <Image src="/brand/iconic-nexus-emblem-v2.png" alt="Iconic Nexus emblem" width={720} height={720} className="mx-auto h-28 w-28 rounded-3xl object-contain md:h-36 md:w-36" />
           </div>
           {featuredCampaign ? (
             <>

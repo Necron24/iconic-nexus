@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const [{ data: projects }, { data: campaigns }] = await Promise.all([
+  const [{ data: projects }, { data: campaigns }, { data: siteReviews }] = await Promise.all([
     supabase
       .from("projects")
       .select("id, slug, name, type, platform, stage, short_description, icon_url, cover_url")
@@ -19,7 +19,8 @@ export default async function HomePage() {
       .eq("status", "active")
       .eq("is_private", false)
       .eq("projects.is_published", true)
-      .limit(1)
+      .limit(1),
+    supabase.from("site_reviews").select("rating,review,profiles(username,display_name)").eq("moderation_status","approved").eq("public_consent",true).order("updated_at",{ascending:false}).limit(6)
   ]);
 
   const featuredCampaign = campaigns?.[0];
@@ -169,6 +170,12 @@ export default async function HomePage() {
             Run closed tests, find beta users and build a community around your project without needing a large marketing budget.
           </p>
         </div>
+      </section>
+
+      <section className="container-page py-16">
+        <div className="text-center"><p className="text-sm font-bold uppercase tracking-[.25em] text-cyan">Community reviews</p><h2 className="mt-3 text-3xl font-black md:text-4xl">What people say about Nexus</h2></div>
+        {siteReviews?.length ? <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{siteReviews.map((review:any,index)=>{const profile=Array.isArray(review.profiles)?review.profiles[0]:review.profiles;return <article className="card p-6" key={`${profile?.username}-${index}`}><p className="text-xl text-amber-300">{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</p><p className="mt-4 leading-7 text-soft">“{review.review}”</p><p className="mt-4 text-sm font-bold">{profile?.display_name||`@${profile?.username}`}</p></article>})}</div>:<div className="card mx-auto mt-8 max-w-2xl p-7 text-center"><p className="text-soft">Community testimonials will appear here after members submit and approve their first reviews.</p></div>}
+        <div className="mt-6 text-center"><Link href="/rate" className="btn-secondary">★ Rate Iconic Nexus</Link></div>
       </section>
     </>
   );

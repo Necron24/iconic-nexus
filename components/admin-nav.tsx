@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, ShieldAlert } from "lucide-react";
+import { BarChart3, ShieldAlert, Star } from "lucide-react";
 
 const links = [
   { href: "/dashboard/admin", label: "Overview", icon: BarChart3 },
-  { href: "/dashboard/admin/reports", label: "Safety & reports", icon: ShieldAlert }
+  { href: "/dashboard/admin/reports", label: "Safety & reports", icon: ShieldAlert },
+  { href: "/dashboard/admin/reviews", label: "Site reviews", icon: Star }
 ];
 
 export function AdminNav() {

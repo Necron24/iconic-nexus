@@ -74,6 +74,7 @@ export function MobileMenu({
               <HelpCircle size={17} />
               Help Centre
             </Link>
+            {signedIn && <Link onClick={() => setOpen(false)} className={navClass("/rate")} href="/rate">★ Rate Nexus</Link>}
 
             {signedIn ? (
               <>

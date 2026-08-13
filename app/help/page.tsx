@@ -66,6 +66,7 @@ export default async function HelpPage() {
         <Link href="/discover" className="btn-primary">Discover projects</Link>
         {user && <Link href="/dashboard/profile" className="btn-secondary"><UserRound size={16}/> Customize profile</Link>}
         <Link href="/contact" className="btn-secondary"><Bug size={16}/> Contact support</Link>
+        {user && <Link href="/rate" className="btn-secondary"><Star size={16}/> Rate Nexus</Link>}
       </div>
     </div>
   </section>;

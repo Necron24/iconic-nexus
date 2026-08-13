@@ -19,7 +19,7 @@ export function MobileMenu({
   const navClass = (href: string) => `rounded-xl border-l-2 px-4 py-3 transition ${pathname === href || pathname.startsWith(`${href}/`) ? "border-cyan bg-cyan/10 font-bold text-white" : "border-transparent hover:bg-white/5"}`;
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         onClick={() => setOpen(!open)}
         className="rounded-lg border border-white/10 p-2"

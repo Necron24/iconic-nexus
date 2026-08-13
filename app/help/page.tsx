@@ -32,25 +32,25 @@ export default async function HelpPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  return <section className="container-page py-14">
+  return <section className="container-page py-10 sm:py-14">
     <div className="mx-auto max-w-5xl">
       <div className="text-center">
         <span className="badge border-cyan/30 text-cyan"><HelpCircle size={14}/> Help Centre</span>
-        <h1 className="mt-5 text-4xl font-black md:text-6xl">Know exactly where everything is</h1>
-        <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-soft">Follow the tester or creator workflow, understand credits and reputation, and see what happens when feedback needs review.</p>
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <Link href="/campaigns" className="btn-primary">Browse campaigns</Link>
-          {user ? <Link href="/dashboard" className="btn-secondary">Open dashboard</Link> : <Link href="/register" className="btn-secondary">Create account</Link>}
-          {user && <form action={restartOnboarding}><button className="btn-secondary" type="submit">Restart guided tour</button></form>}
+        <h1 className="mx-auto mt-5 max-w-4xl text-3xl font-black leading-tight sm:text-4xl lg:text-6xl">Know exactly where everything is</h1>
+        <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-soft sm:text-lg sm:leading-8">Follow the tester or creator workflow, understand credits and reputation, and see what happens when feedback needs review.</p>
+        <div className="mx-auto mt-7 flex max-w-md flex-col justify-center gap-3 sm:max-w-none sm:flex-row sm:flex-wrap">
+          <Link href="/campaigns" className="btn-primary w-full sm:w-auto">Browse campaigns</Link>
+          {user ? <Link href="/dashboard" className="btn-secondary w-full sm:w-auto">Open dashboard</Link> : <Link href="/register" className="btn-secondary w-full sm:w-auto">Create account</Link>}
+          {user && <form action={restartOnboarding} className="w-full sm:w-auto"><button className="btn-secondary w-full sm:w-auto" type="submit">Restart guided tour</button></form>}
         </div>
       </div>
 
-      <nav className="card mt-10 flex flex-wrap justify-center gap-2 p-4" aria-label="Help topics">
+      <nav className="card mt-8 flex flex-wrap justify-center gap-2 p-3 sm:mt-10 sm:p-4" aria-label="Help topics">
         {sections.map((section) => <a key={section.id} href={`#${section.id}`} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-soft transition hover:border-cyan/30 hover:text-white">{section.title}</a>)}
       </nav>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
-        {sections.map(({ id, icon: Icon, title, body, steps }) => <article id={id} key={id} className="card scroll-mt-28 p-6">
+      <div className="mt-8 grid gap-5 lg:grid-cols-2">
+        {sections.map(({ id, icon: Icon, title, body, steps }) => <article id={id} key={id} className="card scroll-mt-28 p-5 sm:p-6">
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-lime text-ink"><Icon size={22}/></div>
           <h2 className="mt-4 text-xl font-black">{title}</h2>
           <p className="mt-3 leading-7 text-soft">{body}</p>

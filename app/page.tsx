@@ -38,9 +38,6 @@ export default async function HomePage() {
       <section className="container-page grid gap-10 py-12 md:grid-cols-[1.08fr_.92fr] md:items-center md:py-16">
         <div>
           <span className="badge mb-5 border-lime/30 text-lime">Built for indie creators</span>
-          <div className="mb-6 inline-flex max-w-full overflow-hidden rounded-3xl border border-white/10 bg-[#071127] p-3 shadow-[0_0_40px_rgba(87,230,255,.08)]">
-            <Image src="/brand/iconic-nexus-logo.png" alt="Iconic Nexus logo" width={2172} height={724} priority className="h-auto w-[340px] max-w-full md:w-[420px]" />
-          </div>
           <h1 className="max-w-4xl text-5xl font-black leading-tight md:text-7xl">
             Where developers and testers <span className="bg-gradient-to-r from-lime to-cyan bg-clip-text text-transparent">connect.</span>
           </h1>

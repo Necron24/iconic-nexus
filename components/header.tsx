@@ -9,6 +9,7 @@ import {
 } from "@/components/notification-popover";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 type HeaderProfile = {
   username: string | null;
@@ -104,6 +105,7 @@ export async function Header() {
         <MainNav signedIn={Boolean(user)} />
 
         <div className="hidden items-center gap-3 lg:flex">
+          <ThemeSwitcher />
           {user ? (
             <>
               <NotificationPopover

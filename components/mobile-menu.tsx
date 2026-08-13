@@ -5,6 +5,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Bell, HelpCircle, LogOut, Menu, Newspaper, Trophy, X } from "lucide-react";
 import { logout } from "@/app/auth/actions";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export function MobileMenu({
   signedIn,
@@ -32,6 +33,7 @@ export function MobileMenu({
       {open && (
         <div className="absolute left-0 top-20 w-full border-b border-white/10 bg-ink p-4 shadow-2xl">
           <nav className="container-page flex flex-col gap-2">
+            <ThemeSwitcher mobile />
             <Link
               onClick={() => setOpen(false)}
               className={navClass("/discover")}

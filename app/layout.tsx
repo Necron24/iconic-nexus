@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import Script from "next/script";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -19,4 +20,4 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Iconic Nexus", description: "Where developers and testers connect.", images: ["/brand/iconic-nexus-logo.png"] },
   robots: { index: true, follow: true }
 };
-export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en"><body><Header /><main className="min-h-screen">{children}</main><Footer /></body></html>; }
+export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en" suppressHydrationWarning><body><Script id="theme-init" strategy="beforeInteractive">{`try{const t=localStorage.getItem('nexus-theme')||'system';document.documentElement.dataset.theme=t==='system'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t}catch(e){document.documentElement.dataset.theme='dark'}`}</Script><Header /><main className="min-h-screen">{children}</main><Footer /></body></html>; }

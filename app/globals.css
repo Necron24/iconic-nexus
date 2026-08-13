@@ -21,6 +21,14 @@
   color-scheme: dark;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="contrast"] {
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -77,6 +85,41 @@ input[type="file"] {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
 }
+
+/* Site-wide user themes. These overrides preserve the existing component
+   hierarchy while keeping text, controls and cards readable in every mode. */
+:root[data-theme="light"] body {
+  background: radial-gradient(circle at top left, rgba(0, 163, 194, .1), transparent 30%), radial-gradient(circle at top right, rgba(93, 170, 0, .1), transparent 26%), #f3f7fb;
+  color: #111827;
+}
+
+:root[data-theme="light"] .bg-ink,
+:root[data-theme="light"] .bg-ink\/85 { background-color: rgba(255, 255, 255, .94) !important; }
+:root[data-theme="light"] .card,
+:root[data-theme="light"] [class*="bg-white/[0.04]"],
+:root[data-theme="light"] [class*="bg-white/[0.05]"] { background-color: rgba(255,255,255,.82) !important; }
+:root[data-theme="light"] .text-white { color: #111827 !important; }
+:root[data-theme="light"] .text-soft { color: #536176 !important; }
+:root[data-theme="light"] .border-white\/10,
+:root[data-theme="light"] .border-white\/15 { border-color: rgba(15,23,42,.16) !important; }
+:root[data-theme="light"] .field,
+:root[data-theme="light"] select,
+:root[data-theme="light"] input,
+:root[data-theme="light"] textarea { color: #111827; }
+:root[data-theme="light"] select { background-color: #fff; }
+:root[data-theme="light"] select option,
+:root[data-theme="light"] select optgroup { color: #111827; background-color: #fff; }
+:root[data-theme="light"] .btn-secondary { color: #111827; background-color: rgba(255,255,255,.75); }
+
+:root[data-theme="contrast"] body { background: #000; color: #fff; }
+:root[data-theme="contrast"] .card,
+:root[data-theme="contrast"] [class*="bg-white/"] { background-color: #000 !important; border-color: #fff !important; }
+:root[data-theme="contrast"] .text-soft { color: #fff !important; }
+:root[data-theme="contrast"] header { background: #000 !important; border-color: #fff !important; }
+:root[data-theme="contrast"] a:focus-visible,
+:root[data-theme="contrast"] button:focus-visible,
+:root[data-theme="contrast"] input:focus-visible,
+:root[data-theme="contrast"] select:focus-visible { outline: 3px solid #9eff3a; outline-offset: 3px; }
 
 /* Discovery benefits from the extra horizontal space on large monitors,
    especially when users choose five or six project cards per row. */

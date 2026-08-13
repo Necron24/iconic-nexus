@@ -29,7 +29,7 @@ export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
     <div className="relative">
       <nav
         aria-label="Dashboard navigation"
-        className="flex snap-x gap-2 overflow-x-auto rounded-[1.4rem] border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.09),0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-x-visible"
+        className="flex flex-wrap justify-center gap-2 rounded-[1.4rem] border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.09),0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-2xl"
       >
         {visibleLinks.map(([href, label]) => {
           const active = href === "/dashboard"
@@ -52,7 +52,6 @@ export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
           );
         })}
       </nav>
-      <div className="pointer-events-none absolute inset-y-2 right-0 w-8 rounded-r-[1.4rem] bg-gradient-to-l from-ink/80 to-transparent lg:hidden" />
     </div>
   );
 }

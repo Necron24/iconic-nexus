@@ -104,7 +104,7 @@ export async function Header() {
 
         <MainNav signedIn={Boolean(user)} />
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 2xl:flex">
           <ThemeSwitcher />
           {user ? (
             <>
@@ -145,7 +145,7 @@ export async function Header() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex items-center gap-2 2xl:hidden">
           {user && (
             <>
               <NotificationPopover

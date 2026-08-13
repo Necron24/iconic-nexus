@@ -19,7 +19,7 @@ export function MobileMenu({
   const navClass = (href: string) => `rounded-xl border-l-2 px-4 py-3 transition ${pathname === href || pathname.startsWith(`${href}/`) ? "border-cyan bg-cyan/10 font-bold text-white" : "border-transparent hover:bg-white/5"}`;
 
   return (
-    <div className="lg:hidden">
+    <div className="2xl:hidden">
       <button
         onClick={() => setOpen(!open)}
         className="rounded-lg border border-white/10 p-2"
@@ -31,7 +31,7 @@ export function MobileMenu({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-20 w-full border-b border-white/10 bg-ink p-4 shadow-2xl">
+        <div className="absolute left-0 top-20 max-h-[calc(100dvh-5rem)] w-full overflow-y-auto border-b border-white/10 bg-ink p-4 shadow-2xl">
           <nav className="container-page flex flex-col gap-2">
             <ThemeSwitcher mobile />
             <Link

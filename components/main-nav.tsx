@@ -14,7 +14,7 @@ export function MainNav({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
   const links = signedIn ? [...publicLinks, ["/dashboard", "Dashboard"] as const, ["/help", "Help"] as const] : [...publicLinks, ["/help", "Help"] as const];
 
-  return <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex" aria-label="Main navigation">
+  return <nav className="hidden items-center gap-2 text-sm font-semibold 2xl:flex" aria-label="Main navigation">
     {links.map(([href, label]) => {
       const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`)) || (href === "/dashboard" && pathname.startsWith("/dashboard"));
       return <Link

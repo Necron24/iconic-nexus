@@ -104,7 +104,7 @@ export async function Header() {
 
         <MainNav signedIn={Boolean(user)} />
 
-        <div className="hidden items-center gap-3 2xl:flex">
+        <div className="hidden shrink-0 items-center gap-3 min-[1680px]:flex">
           <ThemeSwitcher />
           {user ? (
             <>
@@ -115,7 +115,7 @@ export async function Header() {
 
               <Link
                 href={profileHref}
-                className="group flex min-w-0 items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-white/[0.06]"
+                className="group flex min-w-0 shrink-0 items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-white/[0.06]"
                 aria-label="Open my public profile"
               >
                 <ProfileAvatar profile={profile} />
@@ -127,7 +127,7 @@ export async function Header() {
               <form action={logout}>
                 <button
                   type="submit"
-                  className="btn-secondary !px-4 !py-2"
+                  className="btn-secondary shrink-0 whitespace-nowrap !px-4 !py-2"
                 >
                   Log out
                 </button>
@@ -145,7 +145,7 @@ export async function Header() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 2xl:hidden">
+        <div className="flex items-center gap-2 min-[1680px]:hidden">
           {user && (
             <>
               <NotificationPopover

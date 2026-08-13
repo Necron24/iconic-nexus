@@ -19,7 +19,28 @@
 
 :root {
   color-scheme: dark;
+  --nexus-primary: #9eff3a;
+  --nexus-secondary: #57e6ff;
 }
+
+:root[data-accent="ocean"] { --nexus-primary: #38bdf8; --nexus-secondary: #22d3ee; }
+:root[data-accent="violet"] { --nexus-primary: #c084fc; --nexus-secondary: #818cf8; }
+:root[data-accent="sunset"] { --nexus-primary: #fb7185; --nexus-secondary: #fbbf24; }
+:root[data-accent="candy"] { --nexus-primary: #f472b6; --nexus-secondary: #a78bfa; }
+
+:root:not([data-accent="nexus"]) .bg-lime { background-color: var(--nexus-primary) !important; }
+:root:not([data-accent="nexus"]) .text-lime { color: var(--nexus-primary) !important; }
+:root:not([data-accent="nexus"]) .border-lime { border-color: var(--nexus-primary) !important; }
+:root:not([data-accent="nexus"]) .bg-cyan { background-color: var(--nexus-secondary) !important; }
+:root:not([data-accent="nexus"]) .text-cyan { color: var(--nexus-secondary) !important; }
+:root:not([data-accent="nexus"]) .border-cyan { border-color: var(--nexus-secondary) !important; }
+
+:root[data-motion="on"] .card { transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease; }
+:root[data-motion="on"] .card:hover { box-shadow: 0 18px 50px color-mix(in srgb, var(--nexus-secondary) 12%, transparent); }
+:root[data-motion="on"] .btn-primary:hover { animation: nexus-pop .4s ease; }
+@keyframes nexus-pop { 50% { transform: translateY(-2px) scale(1.035); } }
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after { animation: none !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 
 :root[data-theme="light"] {
   color-scheme: light;

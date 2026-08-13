@@ -12,6 +12,9 @@ import { BookmarkButton } from "@/components/bookmark-button";
 import { toggleProjectBookmark } from "@/app/bookmarks/actions";
 import { toggleProjectFollow } from "@/app/following/actions";
 import { PlatformBadges, ProjectTypeBadge, StageBadge } from "@/components/project-meta";
+import { toggleProjectReaction } from "./actions";
+
+const reactionOptions = [["excited","🔥","Excited"],["interested","👀","Interested"],["test","🎮","Want to test"],["innovative","💡","Innovative"],["love","❤️","Love it"]] as const;
 
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -28,7 +31,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   if (!project || (!project.is_published && project.owner_id !== user?.id)) notFound();
 
   const screenshots = [...(project.project_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
-  const [{ data: updates }, { count: followerCount }, followResult, bookmarkResult] = await Promise.all([
+  const [{ data: updates }, { count: followerCount }, followResult, bookmarkResult, reactionsResult] = await Promise.all([
     supabase
       .from("project_updates")
       .select("id,title,body,version_label,update_type,image_url,release_url,created_at,published_at,accent_color,background_color,background_style,background_image_url,heading_font,body_font,card_style,layout_style,text_align,image_fit")
@@ -41,8 +44,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     user && user.id !== project.owner_id
       ? supabase.from("project_follows").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),
-    user ? supabase.from("project_bookmarks").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null })
+    user ? supabase.from("project_bookmarks").select("project_id").eq("project_id", project.id).eq("profile_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from("project_reactions").select("profile_id,reaction").eq("project_id",project.id)
   ]);
+  const reactions=reactionsResult.data??[]; const currentReaction=reactions.find(x=>x.profile_id===user?.id)?.reaction;
+  const reactionCounts=new Map<string,number>(); for(const item of reactions) reactionCounts.set(item.reaction,(reactionCounts.get(item.reaction)??0)+1);
 
   return (
     <section className="container-page relative py-14">
@@ -80,6 +86,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
 
           <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_340px]">
             <div className="space-y-5">
+              <div className="card p-5"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-black">How does this project feel?</h2><p className="mt-1 text-sm text-soft">Leave a quick reaction and encourage the creator.</p></div><div className="flex flex-wrap gap-2">{reactionOptions.map(([value,emoji,label])=><form key={value} action={toggleProjectReaction.bind(null,project.id,project.slug)}><button name="reaction" value={value} title={label} className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-bold transition hover:-translate-y-0.5 ${currentReaction===value?"border-cyan/60 bg-cyan/15 text-cyan":"border-white/10 bg-white/5 hover:bg-white/10"}`}><span className="text-lg">{emoji}</span><span>{reactionCounts.get(value)??0}</span></button></form>)}</div></div></div>
               <div className="card p-6"><h2 className="text-2xl font-black">About this project</h2><p className="mt-4 whitespace-pre-wrap leading-8 text-soft">{project.description || project.short_description}</p></div>
 
               {screenshots.length > 0 && <div className="card p-6"><h2 className="text-2xl font-black">Screenshots</h2><p className="mt-2 text-sm text-soft">Click or tap a thumbnail to view the full-size screenshot.</p><div className="mt-5"><ScreenshotGallery images={screenshots} projectName={project.name} /></div></div>}
